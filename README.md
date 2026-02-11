@@ -196,7 +196,7 @@ Este repositorio contiene material de capacitación técnica. Si encuentras erro
 
 ## 📄 Licencia
 
-Este material es propiedad de Amber y está destinado exclusivamente para uso en el workshop. No está permitida su distribución o uso comercial sin autorización.
+Este proyecto está licenciado bajo la [Licencia MIT](./LICENSE). Copyright © 2026 AMBER CLOUD GLOBAL LLC.
 
 ---
 

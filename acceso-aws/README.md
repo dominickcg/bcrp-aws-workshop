@@ -267,4 +267,4 @@ El instructor te ayudará a resolver el problema para que puedas continuar con e
 
 ---
 
-**Una vez que hayas accedido exitosamente a la consola de AWS en español, estás listo para continuar con el workshop.** Regresa al [README principal del Día 1](../README.md) para comenzar con los laboratorios.
+**Una vez que hayas accedido exitosamente a la consola de AWS en español, estás listo para continuar con el workshop.** Regresa al [README principal del Día 1](../dia-1/README.md) para comenzar con los laboratorios.

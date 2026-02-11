@@ -6,8 +6,7 @@ Bienvenido al primer día del Workshop AWS. En este día aprenderás los fundame
 
 | Hora | Actividad | Duración |
 |------|-----------|----------|
-| 10:00 - 10:05 | Acceso a cuenta AWS | 5 min |
-| 10:05 - 10:15 | Introducción | 10 min |
+| 10:00 - 10:15 | Introducción | 15 min |
 | 10:15 - 11:05 | Lab 1.1: VPC y Subredes | 50 min |
 | 11:05 - 11:55 | Lab 1.2: Despliegue de EC2 | 50 min |
 | 11:55 - 12:00 | Break | 5 min |
@@ -95,31 +94,11 @@ S3 es un servicio de almacenamiento de objetos que ofrece escalabilidad, disponi
 
 ## Prerrequisitos
 
-Antes de comenzar los laboratorios, asegúrate de cumplir con los siguientes requisitos:
+**📖 Consulta los [Prerrequisitos Generales del Workshop](../README.md#prerrequisitos) para información sobre acceso técnico, conocimientos recomendados, acceso a AWS y verificación de región.**
 
-### 1. Acceso a AWS
+Además de los prerrequisitos generales, para el Día 1 necesitas:
 
-- Cuenta de AWS activa proporcionada por el instructor
-- Credenciales de inicio de sesión (usuario y contraseña)
-- Acceso a la Consola de AWS en español
-
-**📖 Consulta la [Guía de Acceso a Cuenta AWS](./acceso-aws/README.md) para instrucciones detalladas sobre cómo iniciar sesión por primera vez, cambiar tu contraseña y configurar el idioma de la consola.**
-
-### 2. Verificación de Región
-
-**IMPORTANTE:** Todos los participantes deben trabajar en la misma región de AWS designada por el instructor.
-
-**Pasos para verificar:**
-
-1. Inicia sesión en la Consola de AWS con el enlace brindado por el instructor
-2. En la esquina superior derecha, junto a tu nombre de usuario, verás el nombre de la región actual
-3. Haz clic en el nombre de la región para abrir el menú desplegable
-4. Selecciona la región indicada por el instructor (ejemplo: **US East (N. Virginia) us-east-1**)
-5. Verifica que la región correcta aparece en la esquina superior derecha
-
-**Nota:** Si trabajas en una región diferente, tus recursos no serán visibles para el instructor y podrías tener problemas de conectividad con recursos compartidos.
-
-### 3. Número de Participante Asignado
+### Número de Participante Asignado
 
 El instructor te asignará un número único (X) que usarás para calcular tus rangos CIDR. Anota este número:
 

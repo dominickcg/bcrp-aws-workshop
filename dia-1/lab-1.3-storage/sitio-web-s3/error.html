@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop AWS - Página No Encontrada</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <img src="assets/logo.svg" alt="Logo Workshop AWS">
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="error-section">
+            <div class="container">
+                <div class="error-content">
+                    <h1 class="error-code">404</h1>
+                    <h2>Página No Encontrada</h2>
+                    <p>Lo sentimos, la página que está buscando no existe o ha sido movida.</p>
+                    
+                    <div class="error-info">
+                        <p>Esta página de error personalizada demuestra la configuración correcta del hosting estático en Amazon S3.</p>
+                        <p>Cuando se intenta acceder a una ruta que no existe, S3 muestra automáticamente este archivo error.html.</p>
+                    </div>
+
+                    <div class="error-actions">
+                        <a href="index.html" class="btn-primary">Volver al Inicio</a>
+                    </div>
+
+                    <div class="error-suggestions">
+                        <h3>Páginas Disponibles:</h3>
+                        <ul>
+                            <li><a href="index.html">Inicio - Página principal del workshop</a></li>
+                            <li><a href="nosotros.html">Nosotros - Información sobre el workshop</a></li>
+                            <li><a href="contacto.html">Contacto - Información de contacto</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>Verificación del Laboratorio</h3>
+                        <p>Si está viendo esta página después de intentar acceder a una URL inexistente, significa que:</p>
+                        <ul>
+                            <li>El hosting estático de S3 está configurado correctamente</li>
+                            <li>El documento de error (error.html) está cargado en el bucket</li>
+                            <li>La política del bucket permite acceso público de lectura</li>
+                            <li>El CSS se está cargando correctamente desde la carpeta /css</li>
+                        </ul>
+                        <p>¡Felicitaciones! Su configuración de S3 está funcionando correctamente.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Workshop AWS</p>
+            <p>Este sitio está alojado en Amazon S3</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

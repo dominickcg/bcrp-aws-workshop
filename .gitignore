@@ -1,0 +1,17 @@
+# Archivos internos
+.internal/
+
+# VS Code
+.vscode/
+
+# Kiro
+.kiro/
+
+# SO
+.DS_Store
+Thumbs.db
+
+# Archivos temporales
+*.tmp
+*.bak
+*~

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop AWS - Nosotros</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <img src="assets/logo.svg" alt="Logo Workshop AWS">
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html" class="active">Nosotros</a></li>
+                    <li><a href="contacto.html">Contacto</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>Acerca del Workshop</h1>
+                <p>Capacitación en servicios de nube de Amazon Web Services</p>
+            </div>
+        </section>
+
+        <section class="content">
+            <div class="container">
+                <h3>Sobre el Workshop AWS</h3>
+                <p>Este workshop ha sido diseñado para proporcionar conocimientos prácticos sobre los servicios fundamentales de Amazon Web Services.</p>
+                
+                <h3>Metodología</h3>
+                <p>El workshop utiliza un enfoque práctico basado en laboratorios donde los participantes configuran recursos reales de AWS en un entorno compartido. Cada participante trabaja con su propio conjunto de recursos identificados mediante un sufijo único.</p>
+
+                <h3>Estructura del Día 1</h3>
+                <div class="info-box">
+                    <h4>Laboratorio 1.1: Aislamiento y Conectividad en VPC</h4>
+                    <p>Los participantes aprenden a configurar redes virtuales privadas, crear subredes públicas y privadas, y establecer conectividad a internet mediante Internet Gateway y tablas de enrutamiento.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>Laboratorio 1.2: Despliegue de EC2</h4>
+                    <p>Los participantes despliegan instancias de computación EC2 con servidores web Apache, configuran grupos de seguridad y utilizan scripts de User Data para automatizar la configuración inicial.</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>Laboratorio 1.3: Almacenamiento EBS y S3</h4>
+                    <p>Los participantes trabajan con almacenamiento de bloques mediante volúmenes EBS y almacenamiento de objetos con S3, incluyendo la configuración de hosting estático para sitios web.</p>
+                </div>
+
+                <h3>Nivel de Conocimiento</h3>
+                <p>Este workshop está dirigido a participantes con nivel AWS Certified Cloud Practitioner. Se asume conocimiento básico de conceptos de nube y familiaridad con la consola de AWS.</p>
+
+                <h3>Entorno Compartido</h3>
+                <p>Todos los participantes trabajan en la misma cuenta de AWS. Para mantener la organización y evitar conflictos:</p>
+                <ul>
+                    <li>Cada recurso debe incluir el sufijo del participante en su nombre</li>
+                    <li>Todos los recursos deben etiquetarse con Owner y Project</li>
+                    <li>No se deben modificar recursos de otros participantes</li>
+                    <li>Los recursos compartidos del instructor no deben ser modificados</li>
+                </ul>
+
+                <h3>Tecnologías Utilizadas</h3>
+                <p>Durante el workshop se trabaja con los siguientes servicios de AWS:</p>
+                <ul>
+                    <li>Amazon VPC - Virtual Private Cloud</li>
+                    <li>Amazon EC2 - Elastic Compute Cloud</li>
+                    <li>Amazon EBS - Elastic Block Store</li>
+                    <li>Amazon S3 - Simple Storage Service</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Workshop AWS</p>
+            <p>Este sitio está alojado en Amazon S3</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

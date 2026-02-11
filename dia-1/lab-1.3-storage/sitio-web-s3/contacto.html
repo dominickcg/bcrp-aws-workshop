@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop AWS - Contacto</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <img src="assets/logo.svg" alt="Logo Workshop AWS">
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="nosotros.html">Nosotros</a></li>
+                    <li><a href="contacto.html" class="active">Contacto</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>Contacto</h1>
+                <p>Información de contacto del workshop</p>
+            </div>
+        </section>
+
+        <section class="content">
+            <div class="container">
+                <div class="contact-grid">
+                    <div class="contact-info">
+                        <h3>Información del Workshop</h3>
+                        <p>Para consultas sobre el Workshop AWS, puede contactarnos a través de los siguientes medios:</p>
+                        
+                        <div class="contact-item">
+                            <h4>Correo Electrónico</h4>
+                            <p>workshop-aws@ejemplo.com</p>
+                        </div>
+
+                        <div class="contact-item">
+                            <h4>Teléfono</h4>
+                            <p>+51 1 XXX-XXXX</p>
+                        </div>
+
+                        <div class="contact-item">
+                            <h4>Horario de Atención</h4>
+                            <p>Lunes a Viernes: 9:00 AM - 5:00 PM</p>
+                        </div>
+
+                        <div class="contact-item">
+                            <h4>Ubicación</h4>
+                            <p>Lima, Perú</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-form">
+                        <h3>Formulario de Consulta</h3>
+                        <form id="contactForm">
+                            <div class="form-group">
+                                <label for="nombre">Nombre Completo:</label>
+                                <input type="text" id="nombre" name="nombre" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Correo Electrónico:</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="laboratorio">Laboratorio:</label>
+                                <select id="laboratorio" name="laboratorio">
+                                    <option value="">Seleccione un laboratorio</option>
+                                    <option value="lab1.1">Lab 1.1 - VPC y Subredes</option>
+                                    <option value="lab1.2">Lab 1.2 - EC2</option>
+                                    <option value="lab1.3">Lab 1.3 - EBS y S3</option>
+                                    <option value="general">Consulta General</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="mensaje">Mensaje:</label>
+                                <textarea id="mensaje" name="mensaje" rows="5" required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn-submit">Enviar Consulta</button>
+                        </form>
+                        <div id="formMessage" class="form-message"></div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h3>Soporte Técnico Durante el Workshop</h3>
+                    <p>Durante las sesiones del workshop, el instructor estará disponible para resolver dudas y problemas técnicos. Si encuentra algún error o necesita asistencia:</p>
+                    <ul>
+                        <li>Levante la mano para solicitar ayuda del instructor</li>
+                        <li>Para errores de permisos, notifique al instructor inmediatamente</li>
+                        <li>Para errores de límites de cuota, notifique al instructor inmediatamente</li>
+                        <li>Consulte la sección de troubleshooting en cada guía de laboratorio</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h3>Recursos Adicionales</h3>
+                    <p>Para continuar su aprendizaje después del workshop:</p>
+                    <ul>
+                        <li><a href="https://aws.amazon.com/es/training/" target="_blank">AWS Training and Certification</a></li>
+                        <li><a href="https://docs.aws.amazon.com/es_es/" target="_blank">Documentación de AWS en Español</a></li>
+                        <li><a href="https://aws.amazon.com/es/getting-started/" target="_blank">Guías de Inicio de AWS</a></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Workshop AWS</p>
+            <p>Este sitio está alojado en Amazon S3</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

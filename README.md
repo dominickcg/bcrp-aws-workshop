@@ -22,26 +22,30 @@ El contenido está diseñado para participantes con nivel **AWS Certified Cloud 
 
 ## 📅 Programa del Workshop
 
-### Día 1 - Fundamentos de AWS: Redes, Cómputo, Almacenamiento
-**Duración:** 3 horas
+### Día 1 - Fundamentos de AWS: Redes y Cómputo
+**Duración:** 2 horas
 
-Aprende a configurar la infraestructura base de AWS, incluyendo redes virtuales aisladas, servidores virtuales con configuración automatizada, y almacenamiento persistente y de objetos.
+Aprende a configurar la infraestructura base de AWS, incluyendo redes virtuales aisladas y servidores virtuales con configuración automatizada.
 
 **Laboratorios:**
 - Lab 1.1: Configuración de VPC y Subredes
 - Lab 1.2: Despliegue de Instancias EC2
-- Lab 1.3: Almacenamiento EBS y S3
 
 📖 [Ver contenido del Día 1](./dia-1/README.md)
 
 ---
 
-### Día 2 - Bases de Datos, Elasticidad y Alta Disponibilidad, Monitoreo
-**Duración:** TBD
+### Día 2 - Almacenamiento, Bases de Datos y Alta Disponibilidad
+**Duración:** 3 horas
 
-Explora servicios de bases de datos administradas, arquitecturas escalables y resilientes, y herramientas de monitoreo y observabilidad.
+Explora servicios de almacenamiento persistente y de objetos, bases de datos administradas en configuración Multi-AZ, y arquitecturas web escalables con balanceadores de carga y auto scaling.
 
-**Contenido:** 🚧 En desarrollo
+**Laboratorios:**
+- Lab 2.1: Almacenamiento EBS y S3
+- Lab 2.2: Base de Datos RDS Multi-AZ
+- Lab 2.3: Elasticidad con ELB, ASG y CloudFormation
+
+📖 [Ver contenido del Día 2](./dia-2/README.md)
 
 ---
 
@@ -69,14 +73,19 @@ Descubre servicios de inteligencia artificial y machine learning de AWS, incluye
 bcrp-aws-workshop/
 ├── README.md                                    # Este archivo
 ├── acceso-aws/                                  # Guía de acceso a AWS
-├── dia-1/                                       # Día 1: Fundamentos
+├── dia-1/                                       # Día 1: Redes y Cómputo
 │   ├── README.md                                # Guía principal del Día 1
 │   ├── TROUBLESHOOTING.md                       # Solución de problemas
 │   ├── lab-1.1-vpc/                             # Lab: VPC y Subredes
 │   ├── lab-1.2-ec2/                             # Lab: EC2
-│   ├── lab-1.3-storage/                         # Lab: EBS y S3
 │   └── limpieza/                                # Guía de limpieza opcional
-├── dia-2/                                       # 🚧 En desarrollo
+├── dia-2/                                       # Día 2: Almacenamiento, BD y HA
+│   ├── README.md                                # Guía principal del Día 2
+│   ├── TROUBLESHOOTING.md                       # Solución de problemas
+│   ├── lab-2.1-storage/                         # Lab: EBS y S3
+│   ├── lab-2.2-rds/                             # Lab: RDS Multi-AZ
+│   ├── lab-2.3-ha-elb-asg/                      # Lab: ELB, ASG y CloudFormation
+│   └── limpieza/                                # Guía de limpieza opcional
 ├── dia-3/                                       # 🚧 En desarrollo
 └── dia-4/                                       # 🚧 En desarrollo
 ```
@@ -163,7 +172,6 @@ Antes de comenzar cualquier laboratorio, asegúrate de tener acceso configurado:
 Este workshop utiliza un **entorno compartido** donde múltiples participantes trabajan en la misma cuenta AWS. Es fundamental seguir estas reglas:
 
 - ✅ Usa nomenclatura con tu identificador único en todos los recursos
-- ✅ Agrega tags obligatorios (Owner, Project) a cada recurso
 - ❌ NO modifiques recursos de otros participantes
 - ❌ NO elimines recursos compartidos del instructor
 - ❌ NO recrees recursos que ya existen

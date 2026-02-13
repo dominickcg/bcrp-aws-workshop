@@ -1,0 +1,412 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Plantilla CloudFormation para desplegar Auto Scaling Group con aplicación web conectada a RDS - Workshop BCRP Día 2'
+
+Parameters:
+  DBEndpoint:
+    Type: String
+    Description: Endpoint de la instancia RDS MySQL (ejemplo rds-mysql-nombre.xxxxx.us-east-1.rds.amazonaws.com)
+    
+  DBUser:
+    Type: String
+    Description: Usuario maestro de la base de datos RDS
+    Default: admin
+    
+  DBPassword:
+    Type: String
+    Description: Contraseña de la base de datos RDS
+    NoEcho: true
+    
+  SecurityGroupId:
+    Type: String
+    Description: ID del Security Group para las instancias EC2 (sg-xxxxx)
+    
+  TargetGroupArn:
+    Type: String
+    Description: ARN del Target Group del Application Load Balancer
+    
+  VPCId:
+    Type: String
+    Description: ID de la VPC compartida del workshop
+    
+  SubnetIds:
+    Type: CommaDelimitedList
+    Description: Lista de IDs de subredes públicas separadas por comas (subnet-xxxxx,subnet-yyyyy)
+
+Resources:
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub 'lt-web-${AWS::StackName}'
+      LaunchTemplateData:
+        ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+        InstanceType: t3.micro
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            # Actualizar sistema
+            yum update -y
+            
+            # Instalar Apache y PHP
+            yum install -y httpd php php-mysqlnd
+            
+            # Crear directorio de aplicación
+            mkdir -p /var/www/html
+            
+            # Crear archivo de configuración
+            cat > /var/www/html/config.php << 'EOFCONFIG'
+            <?php
+            define('DB_HOST', '${DBEndpoint}');
+            define('DB_USER', '${DBUser}');
+            define('DB_PASS', '${DBPassword}');
+            define('DB_NAME', 'workshopdb');
+            ?>
+            EOFCONFIG
+            
+            # Crear archivo index.php con interfaz web
+            cat > /var/www/html/index.php << 'EOFINDEX'
+            <?php
+            require_once 'config.php';
+            
+            // Conectar a la base de datos
+            $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+            
+            // Verificar conexión
+            if ($conn->connect_error) {
+                die("Error de conexión: " . $conn->connect_error);
+            }
+            
+            // Crear tabla si no existe
+            $sql_create = "CREATE TABLE IF NOT EXISTS messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                email VARCHAR(100) NOT NULL,
+                mensaje TEXT NOT NULL,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )";
+            $conn->query($sql_create);
+            
+            // Procesar formulario si se envió
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $nombre = $conn->real_escape_string($_POST['nombre']);
+                $email = $conn->real_escape_string($_POST['email']);
+                $mensaje = $conn->real_escape_string($_POST['mensaje']);
+                
+                $sql_insert = "INSERT INTO messages (nombre, email, mensaje) VALUES ('$nombre', '$email', '$mensaje')";
+                
+                if ($conn->query($sql_insert) === TRUE) {
+                    $success_message = "Mensaje guardado exitosamente";
+                } else {
+                    $error_message = "Error: " . $conn->error;
+                }
+            }
+            
+            // Obtener todos los mensajes
+            $sql_select = "SELECT * FROM messages ORDER BY fecha DESC";
+            $result = $conn->query($sql_select);
+            ?>
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Workshop AWS - Aplicación de Prueba</title>
+                <style>
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    
+                    body {
+                        font-family: 'Arial', sans-serif;
+                        background-color: #f5f5f5;
+                        color: #333;
+                    }
+                    
+                    header {
+                        background-color: #232F3E;
+                        color: white;
+                        padding: 20px;
+                        text-align: center;
+                    }
+                    
+                    header h1 {
+                        font-size: 28px;
+                        margin-bottom: 5px;
+                    }
+                    
+                    header p {
+                        font-size: 14px;
+                        color: #FF9900;
+                    }
+                    
+                    .container {
+                        max-width: 1200px;
+                        margin: 30px auto;
+                        padding: 0 20px;
+                    }
+                    
+                    .card {
+                        background: white;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        padding: 30px;
+                        margin-bottom: 30px;
+                    }
+                    
+                    h2 {
+                        color: #232F3E;
+                        margin-bottom: 20px;
+                        font-size: 24px;
+                    }
+                    
+                    .form-group {
+                        margin-bottom: 20px;
+                    }
+                    
+                    label {
+                        display: block;
+                        margin-bottom: 8px;
+                        font-weight: bold;
+                        color: #555;
+                    }
+                    
+                    input[type="text"],
+                    input[type="email"],
+                    textarea {
+                        width: 100%;
+                        padding: 12px;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        font-size: 14px;
+                        font-family: 'Arial', sans-serif;
+                    }
+                    
+                    textarea {
+                        resize: vertical;
+                        min-height: 100px;
+                    }
+                    
+                    button {
+                        background-color: #FF9900;
+                        color: white;
+                        padding: 12px 30px;
+                        border: none;
+                        border-radius: 4px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        transition: background-color 0.3s;
+                    }
+                    
+                    button:hover {
+                        background-color: #ec7211;
+                    }
+                    
+                    .alert {
+                        padding: 15px;
+                        border-radius: 4px;
+                        margin-bottom: 20px;
+                    }
+                    
+                    .alert-success {
+                        background-color: #d4edda;
+                        color: #155724;
+                        border: 1px solid #c3e6cb;
+                    }
+                    
+                    .alert-error {
+                        background-color: #f8d7da;
+                        color: #721c24;
+                        border: 1px solid #f5c6cb;
+                    }
+                    
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                    }
+                    
+                    th {
+                        background-color: #232F3E;
+                        color: white;
+                        padding: 12px;
+                        text-align: left;
+                        font-weight: bold;
+                    }
+                    
+                    td {
+                        padding: 12px;
+                        border-bottom: 1px solid #ddd;
+                    }
+                    
+                    tr:hover {
+                        background-color: #f9f9f9;
+                    }
+                    
+                    .no-data {
+                        text-align: center;
+                        padding: 40px;
+                        color: #999;
+                        font-style: italic;
+                    }
+                    
+                    footer {
+                        background-color: #232F3E;
+                        color: white;
+                        text-align: center;
+                        padding: 20px;
+                        margin-top: 50px;
+                    }
+                    
+                    footer p {
+                        font-size: 14px;
+                    }
+                    
+                    .instance-info {
+                        background-color: #e7f3ff;
+                        border-left: 4px solid #0066cc;
+                        padding: 15px;
+                        margin-bottom: 20px;
+                        border-radius: 4px;
+                    }
+                    
+                    .instance-info p {
+                        margin: 5px 0;
+                        font-size: 14px;
+                    }
+                </style>
+            </head>
+            <body>
+                <header>
+                    <h1>Workshop AWS - Aplicación de Prueba</h1>
+                    <p>Laboratorio 2.3: Elasticidad y Alta Disponibilidad</p>
+                </header>
+                
+                <div class="container">
+                    <div class="instance-info">
+                        <p><strong>Instancia EC2:</strong> <?php echo gethostname(); ?></p>
+                        <p><strong>IP Privada:</strong> <?php echo $_SERVER['SERVER_ADDR']; ?></p>
+                    </div>
+                    
+                    <div class="card">
+                        <h2>Enviar Mensaje</h2>
+                        
+                        <?php if (isset($success_message)): ?>
+                            <div class="alert alert-success"><?php echo $success_message; ?></div>
+                        <?php endif; ?>
+                        
+                        <?php if (isset($error_message)): ?>
+                            <div class="alert alert-error"><?php echo $error_message; ?></div>
+                        <?php endif; ?>
+                        
+                        <form method="POST" action="">
+                            <div class="form-group">
+                                <label for="nombre">Nombre:</label>
+                                <input type="text" id="nombre" name="nombre" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email:</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="mensaje">Mensaje:</label>
+                                <textarea id="mensaje" name="mensaje" required></textarea>
+                            </div>
+                            
+                            <button type="submit">Enviar Mensaje</button>
+                        </form>
+                    </div>
+                    
+                    <div class="card">
+                        <h2>Mensajes Guardados</h2>
+                        
+                        <?php if ($result && $result->num_rows > 0): ?>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Mensaje</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php while($row = $result->fetch_assoc()): ?>
+                                        <tr>
+                                            <td><?php echo $row['id']; ?></td>
+                                            <td><?php echo htmlspecialchars($row['nombre']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['email']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['mensaje']); ?></td>
+                                            <td><?php echo $row['fecha']; ?></td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <div class="no-data">
+                                No hay mensajes guardados todavía. ¡Sé el primero en enviar uno!
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <footer>
+                    <p>Workshop BCRP - AWS Día 2</p>
+                    <p>Laboratorio 2.3: Elasticidad con ELB, ASG y CloudFormation</p>
+                </footer>
+            </body>
+            </html>
+            <?php
+            $conn->close();
+            ?>
+            EOFINDEX
+            
+            # Configurar permisos
+            chown -R apache:apache /var/www/html
+            chmod -R 755 /var/www/html
+            
+            # Iniciar y habilitar Apache
+            systemctl start httpd
+            systemctl enable httpd
+
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Sub 'asg-web-${AWS::StackName}'
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      MinSize: 2
+      DesiredCapacity: 2
+      MaxSize: 4
+      VPCZoneIdentifier: !Ref SubnetIds
+      TargetGroupARNs:
+        - !Ref TargetGroupArn
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 300
+      Tags:
+        - Key: Name
+          Value: !Sub 'ec2-asg-${AWS::StackName}'
+          PropagateAtLaunch: true
+        - Key: Workshop
+          Value: BCRP-Dia2
+          PropagateAtLaunch: true
+
+Outputs:
+  AutoScalingGroupName:
+    Description: Nombre del Auto Scaling Group creado
+    Value: !Ref AutoScalingGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-ASG-Name'
+  
+  LaunchTemplateId:
+    Description: ID del Launch Template creado
+    Value: !Ref LaunchTemplate
+    Export:
+      Name: !Sub '${AWS::StackName}-LT-Id'

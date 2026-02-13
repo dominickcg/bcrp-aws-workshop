@@ -23,7 +23,7 @@ El contenido está diseñado para participantes con nivel **AWS Certified Cloud 
 ## 📅 Programa del Workshop
 
 ### Día 1 - Fundamentos de AWS: Redes y Cómputo
-**Duración:** 2 horas
+**Duración:** 3 horas
 
 Aprende a configurar la infraestructura base de AWS, incluyendo redes virtuales aisladas y servidores virtuales con configuración automatizada.
 

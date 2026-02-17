@@ -50,11 +50,16 @@ Explora servicios de almacenamiento persistente y de objetos, bases de datos adm
 ---
 
 ### Día 3 - Seguridad, Identidad y Gobernanza
-**Duración:** TBD
+**Duración:** 2 horas 50 minutos
 
-Implementa mejores prácticas de seguridad, gestión de identidades y accesos, y políticas de gobernanza en AWS.
+Implementa mejores prácticas de seguridad, gestión de identidades y accesos, y políticas de gobernanza en AWS. Aprende a proteger aplicaciones web con AWS WAF, gestionar accesos mediante roles IAM y Session Manager, y auditar acciones con CloudTrail y Trusted Advisor.
 
-**Contenido:** 🚧 En desarrollo
+**Laboratorios:**
+- Lab 3.1: Protección Perimetral con AWS WAF
+- Lab 3.2: Gestión de Identidades y Acceso Seguro (IAM y Session Manager)
+- Lab 3.3: Gobernanza y Auditoría (CloudTrail y Trusted Advisor)
+
+📖 [Ver contenido del Día 3](./dia-3/README.md)
 
 ---
 
@@ -86,8 +91,14 @@ bcrp-aws-workshop/
 │   ├── lab-2.2-rds/                             # Lab: RDS Multi-AZ
 │   ├── lab-2.3-ha-elb-asg/                      # Lab: ELB, ASG y CloudFormation
 │   └── limpieza/                                # Guía de limpieza opcional
-├── dia-3/                                       # 🚧 En desarrollo
-└── dia-4/                                       # 🚧 En desarrollo
+├── dia-3/                                       # Día 3: Seguridad, Identidad y Gobernanza
+│   ├── README.md                                # Guía principal del Día 3
+│   ├── TROUBLESHOOTING.md                       # Solución de problemas
+│   ├── lab-3.1-waf/                             # Lab: AWS WAF
+│   ├── lab-3.2-iam-ssm/                         # Lab: IAM y Session Manager
+│   ├── lab-3.3-governance/                      # Lab: CloudTrail y Trusted Advisor
+│   └── limpieza/                                # Guía de limpieza opcional
+├── dia-4/                                       # 🚧 En desarrollo
 ```
 
 ## 🎯 Objetivos de Aprendizaje

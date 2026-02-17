@@ -53,7 +53,7 @@ Es importante seguir este orden para evitar errores de dependencias:
 4. Application Load Balancer
 5. Instancia RDS
 6. Grupo de subredes de RDS
-7. Security Groups (RDS y Web)
+7. Security Groups (RDS, Web y ALB - en ese orden)
 8. Bucket S3
 9. Volumen EBS
 
@@ -159,13 +159,13 @@ Es importante seguir este orden para evitar errores de dependencias:
 
 ## Paso 7: Eliminar Security Groups
 
-**Importante**: Elimine primero el Security Group de RDS, luego el de Web.
+**Importante**: Elimine los Security Groups en el siguiente orden: primero RDS, luego Web, y finalmente ALB.
 
 ### 7.1 Eliminar Security Group de RDS
 
 1. Abra la consola de **EC2**
 2. En el panel de navegación izquierdo, haga clic en **Red y seguridad** > **Grupos de seguridad**
-3. Busque el Security Group: `sg-rds-{nombre-participante}`
+3. Busque el Security Group: `rds-sg-{nombre-participante}`
 4. Seleccione el Security Group marcando la casilla
 5. Haga clic en el botón **Acciones** > **Eliminar grupos de seguridad**
 6. Confirme haciendo clic en **Eliminar**
@@ -175,12 +175,22 @@ Es importante seguir este orden para evitar errores de dependencias:
 ### 7.2 Eliminar Security Group de Web
 
 1. En la misma pantalla de **Grupos de seguridad**
-2. Busque el Security Group: `sg-web-{nombre-participante}`
+2. Busque el Security Group: `web-sg-{nombre-participante}`
 3. Seleccione el Security Group marcando la casilla
 4. Haga clic en el botón **Acciones** > **Eliminar grupos de seguridad**
 5. Confirme haciendo clic en **Eliminar**
 
 **✓ Verificación**: El Security Group de Web ya no aparece en la lista.
+
+### 7.3 Eliminar Security Group de ALB
+
+1. En la misma pantalla de **Grupos de seguridad**
+2. Busque el Security Group: `alb-sg-{nombre-participante}`
+3. Seleccione el Security Group marcando la casilla
+4. Haga clic en el botón **Acciones** > **Eliminar grupos de seguridad**
+5. Confirme haciendo clic en **Eliminar**
+
+**✓ Verificación**: El Security Group de ALB ya no aparece en la lista.
 
 **Nota**: Si recibe un error indicando que el Security Group está en uso, espere unos minutos y reintente. Puede que algún recurso aún esté terminando.
 
@@ -270,8 +280,9 @@ Revise que todos los recursos con su nombre de participante han sido eliminados:
 - [ ] Application Load Balancer: `alb-web-{nombre-participante}`
 - [ ] Instancia RDS: `rds-mysql-{nombre-participante}`
 - [ ] Grupo de subredes de RDS: `rds-subnet-group-{nombre-participante}`
-- [ ] Security Group RDS: `sg-rds-{nombre-participante}`
-- [ ] Security Group Web: `sg-web-{nombre-participante}`
+- [ ] Security Group RDS: `rds-sg-{nombre-participante}`
+- [ ] Security Group Web: `web-sg-{nombre-participante}`
+- [ ] Security Group ALB: `alb-sg-{nombre-participante}`
 - [ ] Bucket S3: `workshop-aws-{nombre-participante}-{numero}`
 - [ ] Volumen EBS: `ebs-data-{nombre-participante}`
 

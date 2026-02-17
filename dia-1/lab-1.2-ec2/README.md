@@ -39,7 +39,7 @@ Un grupo de seguridad actúa como un firewall virtual que controla el tráfico d
 4. Configura los siguientes valores:
 
    **Detalles básicos:**
-   - **Nombre del grupo de seguridad:** `Web-Server-SG-{tu-nombre}` (reemplaza `{tu-nombre}` con tu sufijo de participante)
+   - **Nombre del grupo de seguridad:** `web-sg-{tu-nombre}` (reemplaza `{tu-nombre}` con tu sufijo de participante)
    - **Descripción:** `Security group para servidor web del participante {tu-nombre}`
    - **VPC:** Selecciona la VPC **Lab-VPC** creada por el instructor en el Lab 1.1
 
@@ -136,10 +136,10 @@ Ahora lanzarás una instancia EC2 con Amazon Linux 2023 y un servidor web Apache
 Haz clic en **Editar** en la sección de configuración de red:
 
 - **VPC:** Selecciona **Lab-VPC** (la VPC creada por el instructor)
-- **Subred:** Selecciona tu subred pública creada en el Lab 1.1: `Subnet-Public-{tu-nombre}` (debe estar en la zona de disponibilidad **us-east-1a**)
+- **Subred:** Selecciona tu subred pública creada en el Lab 1.1: `subnet-publica-{tu-nombre}` (debe estar en la zona de disponibilidad **us-east-1a**)
 - **Asignar IP pública automáticamente:** Habilitar
 - **Firewall (grupos de seguridad):** Seleccionar grupo de seguridad existente
-- **Grupos de seguridad comunes:** Selecciona el grupo `Web-Server-SG-{tu-nombre}` que creaste en el Paso 2
+- **Grupos de seguridad comunes:** Selecciona el grupo `web-sg-{tu-nombre}` que creaste en el Paso 2
 
 ### 4.6 Configurar almacenamiento
 
@@ -235,7 +235,7 @@ Para soluciones detalladas, consulta la sección **Lab 1.2 - EC2** en la [Guía 
 **IMPORTANTE:** Los siguientes recursos deben **mantenerse activos** para el Día 2 del workshop:
 
 - ✅ Instancia EC2: `ec2-webserver-{tu-nombre}`
-- ✅ Grupo de seguridad: `Web-Server-SG-{tu-nombre}`
+- ✅ Grupo de seguridad: `web-sg-{tu-nombre}`
 - ✅ Par de claves: `ec2-keypair-{tu-nombre}`
 - ✅ Volumen EBS raíz (adjunto a la instancia)
 
@@ -262,4 +262,4 @@ Si deseas detener temporalmente la instancia para ahorrar costos (opcional):
 
 ---
 
-[← Anterior: Lab 1.1 - VPC](../lab-1.1-vpc/README.md) | [Volver al Día 1](../README.md) | [Siguiente: Lab 1.3 - Almacenamiento →](../lab-1.3-storage/README.md)
+[← Anterior: Lab 1.1 - VPC](../lab-1.1-vpc/README.md) | [Volver al Día 1](../README.md)

@@ -79,25 +79,6 @@ Si el problema persiste después de intentar las soluciones sugeridas, notifica 
 - El instructor ajustará los límites de cuota en la cuenta
 
 ---
-
-## Lab 1.3 - Almacenamiento
-
-### Problema: Access Denied en S3
-**Descripción:** Al intentar acceder al sitio web estático, aparece "Access Denied".
-
-**Solución:**
-- Verifica que desactivaste "Block all public access" en la configuración del bucket
-- Confirma que aplicaste la Bucket Policy correctamente
-- Asegúrate de reemplazar `NOMBRE-DEL-BUCKET` en la política con el nombre real de tu bucket
-- Verifica que la política JSON no tiene errores de sintaxis
-- Usa el endpoint de "Static website hosting", no la URL de objeto S3
-
-### Problema: Device busy al montar volumen EBS
-**Descripción:** Al intentar formatear o montar el volumen, aparece "device is busy".
-
-**Solución:**
-- Verifica que no hay procesos usando el dispositivo con: `lsof /dev/xvdf`
-- Asegúrate de que el volumen está adjunto a la instancia (estado "attached")
 - Usa el nombre de dispositivo correcto mostrado por `lsblk`
 - Si persiste, desadjunta y vuelve a adjuntar el volumen
 

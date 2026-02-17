@@ -1,6 +1,6 @@
 # Sitio Web Estático para S3
 
-Este directorio contiene todos los archivos necesarios para el hosting estático en Amazon S3 del Laboratorio 1.3.
+Este directorio contiene todos los archivos necesarios para el hosting estático en Amazon S3 del Laboratorio 2.1 del Día 2.
 
 ## Estructura de Archivos
 
@@ -16,7 +16,7 @@ sitio-web-s3/
 │   └── main.js         # JavaScript para funcionalidad del sitio
 └── assets/
     ├── logo.svg        # Logo del workshop (formato SVG)
-    ├── favicon.svg     # Favicon del sitio (formato SVG)
+    ├── favicon.svg     # Favicon del sitio (formato ICO)
     ├── generate-images.py  # Script opcional para generar PNG/ICO
     └── README.md       # Instrucciones para generar imágenes
 ```
@@ -25,8 +25,8 @@ sitio-web-s3/
 
 ### Páginas HTML
 
-1. **index.html**: Página principal con información general del workshop y los tres laboratorios del Día 1
-2. **nosotros.html**: Información detallada sobre el workshop, metodología y estructura
+1. **index.html**: Página principal con información general del workshop y los tres laboratorios del Día 2
+2. **nosotros.html**: Información detallada sobre el workshop, metodología y estructura del Día 2
 3. **contacto.html**: Página de contacto con formulario funcional (demostración)
 4. **error.html**: Página de error 404 personalizada que se muestra cuando se accede a rutas inexistentes
 
@@ -44,7 +44,7 @@ sitio-web-s3/
 - Actualización dinámica del año en el footer
 - Smooth scrolling para enlaces internos
 - Logging de tiempo de carga de página
-- Mensajes de consola para verificación
+- Mensajes de consola para verificación del Día 2
 
 ### Assets
 
@@ -52,7 +52,7 @@ sitio-web-s3/
 - **favicon.svg**: Icono del sitio en formato SVG
 - **generate-images.py**: Script Python opcional para generar versiones PNG/ICO
 
-## Uso en el Laboratorio 1.3
+## Uso en el Laboratorio 2.1
 
 ### Paso 1: Preparación Local
 
@@ -101,8 +101,8 @@ Abra la consola del navegador (F12) y verifique:
 Workshop AWS BCRP - JavaScript loaded successfully
 Site hosted on Amazon S3
 ==================================================
-Workshop AWS BCRP - Día 1
-Laboratorio 1.3: Almacenamiento EBS y S3
+Workshop AWS BCRP - Día 2
+Laboratorio 2.1: Almacenamiento EBS y S3
 JavaScript ejecutándose correctamente
 ==================================================
 ```

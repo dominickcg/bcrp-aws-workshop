@@ -49,7 +49,8 @@ Antes de comenzar este laboratorio, debes tener:
   - Instancia RDS MySQL en estado "Disponible"
   - Endpoint de RDS anotado
   - Credenciales de RDS (usuario y contraseña) anotadas
-  - Security Group para instancias web (`sg-web-{nombre-participante}`)
+  - Security Group para ALB (`alb-sg-{nombre-participante}`)
+  - Security Group para instancias web (`web-sg-{nombre-participante}`)
 
 ## Instrucciones
 
@@ -90,9 +91,11 @@ Un Application Load Balancer (ALB) distribuye automáticamente el tráfico entra
 
 2. En la sección **Grupos de seguridad**:
    - Elimine el grupo de seguridad predeterminado si está seleccionado
-   - Seleccione el Security Group **`sg-web-{nombre-participante}`** que creó en el Lab 2.2
+   - Seleccione el Security Group **`alb-sg-{nombre-participante}`** que creó en el Lab 2.2
 
-**✓ Verificación**: Confirme que ha seleccionado al menos 2 subredes públicas en diferentes zonas de disponibilidad y el Security Group correcto.
+⚠️ **Importante**: Use el Security Group del ALB (`alb-sg-{nombre-participante}`), NO el de las instancias web. El ALB debe aceptar tráfico de internet, mientras que las instancias solo aceptarán tráfico del ALB.
+
+**✓ Verificación**: Confirme que ha seleccionado al menos 2 subredes públicas en diferentes zonas de disponibilidad y el Security Group `alb-sg-{nombre-participante}`.
 
 ### Paso 4: Crear Target Group
 
@@ -164,6 +167,48 @@ CloudFormation es un servicio de infraestructura como código que permite defini
 
 ### Paso 8: Configurar Parámetros de la Pila
 
+⚠️ **IMPORTANTE - Verificación del Security Group**: Antes de continuar, debe asegurarse de que el Security Group `web-sg-{nombre-participante}` tiene las reglas correctas:
+
+1. Vaya a **EC2** > **Grupos de seguridad**
+2. Busque y seleccione `web-sg-{nombre-participante}`
+3. En la pestaña **Reglas de entrada**, verifique que tiene:
+   - **Tipo**: HTTP
+   - **Puerto**: 80
+   - **Origen**: `alb-sg-{nombre-participante}` (debe aparecer el ID del Security Group del ALB)
+
+4. Si NO tiene esta regla correctamente configurada, haga clic en **Editar reglas de entrada** y corríjala:
+   - Elimine cualquier regla que permita tráfico desde 0.0.0.0/0
+   - Haga clic en **Agregar regla**
+   - **Tipo**: HTTP
+   - **Origen**: Busque y seleccione `alb-sg-{nombre-participante}`
+   - Haga clic en **Guardar reglas**
+
+**¿Por qué esta configuración?** Siguiendo el principio de mínimo privilegio, las instancias web solo deben aceptar tráfico del ALB, no directamente de internet. Esto mejora la seguridad al crear una arquitectura en capas donde solo el ALB es accesible públicamente.
+
+**✓ Verificación**: Confirme que el Security Group permite tráfico HTTP en el puerto 80 SOLO desde `alb-sg-{nombre-participante}` (NO desde 0.0.0.0/0).
+
+---
+
+⚠️ **IMPORTANTE - Verificación del Security Group RDS**: También debe verificar que el Security Group de RDS está configurado correctamente para permitir conexiones desde las instancias web:
+
+1. En **EC2** > **Grupos de seguridad**, busque y seleccione `rds-sg-{nombre-participante}`
+2. En la pestaña **Reglas de entrada**, verifique que tiene:
+   - **Tipo**: MySQL/Aurora
+   - **Puerto**: 3306
+   - **Origen**: El Security Group `web-sg-{nombre-participante}` (debe aparecer el ID del Security Group, no una IP)
+
+3. Si NO tiene esta regla, haga clic en **Editar reglas de entrada** y agréguela:
+   - Haga clic en **Agregar regla**
+   - **Tipo**: MySQL/Aurora
+   - **Origen**: Busque y seleccione `web-sg-{nombre-participante}`
+   - Haga clic en **Guardar reglas**
+
+⚠️ **Advertencia**: Si esta regla no existe, la aplicación no podrá conectarse a RDS y el formulario no funcionará correctamente.
+
+**✓ Verificación**: Confirme que el Security Group de RDS permite conexiones MySQL/Aurora (puerto 3306) desde el Security Group `web-sg-{nombre-participante}`.
+
+---
+
 1. En la página **Especificar detalles de la pila**:
    - **Nombre de la pila**: `stack-web-{nombre-participante}`
 
@@ -177,9 +222,10 @@ CloudFormation es un servicio de infraestructura como código que permite defini
    
    - **DBPassword**: Ingrese la contraseña de RDS que configuró en el Lab 2.2
    
-   - **SecurityGroupId**: Ingrese el ID del Security Group `sg-web-{nombre-participante}` que creó en el Lab 2.2
+   - **SecurityGroupId**: Ingrese el ID del Security Group `web-sg-{nombre-participante}` que creó en el Lab 2.2
      - Ejemplo: `sg-0123456789abcdef0`
      - Para encontrarlo: Vaya a EC2 > Grupos de seguridad > Busque su Security Group > Copie el ID
+     - **Nota**: Este es el Security Group para las instancias EC2, NO el del ALB. Las instancias solo aceptarán tráfico del ALB gracias a la configuración de Security Groups en capas.
    
    - **TargetGroupArn**: Pegue el ARN del Target Group que copió en el Paso 5
    
@@ -247,6 +293,28 @@ CloudFormation es un servicio de infraestructura como código que permite defini
 - Las instancias están en estado "InService"
 - El Launch Template está asociado al Auto Scaling Group
 
+### Paso 10.5: Verificar Estado del Target Group
+
+Antes de intentar acceder a la aplicación web, es fundamental verificar que las instancias del Auto Scaling Group hayan pasado las comprobaciones de estado (health checks) del Target Group. Si las instancias no están en estado "healthy", el ALB no podrá enrutar el tráfico hacia ellas.
+
+1. En la consola de EC2, en el panel de navegación de la izquierda, haga clic en **Grupos de destino**
+2. Seleccione su Target Group `tg-web-{nombre-participante}`
+3. Haga clic en la pestaña **Destinos**
+4. Observe el estado de las instancias registradas:
+   - **Estado inicial**: Las instancias aparecerán como **initial** (inicial)
+   - **Estado en progreso**: Cambiarán a **unhealthy** (no saludable) mientras se ejecuta el User Data
+   - **Estado final esperado**: Deben cambiar a **healthy** (saludable)
+
+⏱️ **Nota**: Las instancias pueden tardar 3-5 minutos en pasar los health checks después de lanzarse. Esto es normal porque el User Data debe:
+- Instalar Apache y PHP
+- Crear los archivos de la aplicación web
+- Iniciar el servidor web Apache
+- Responder correctamente a las comprobaciones de estado del ALB
+
+5. Espere hasta que al menos 1 instancia muestre el estado **healthy** antes de continuar al siguiente paso
+
+**✓ Verificación**: Confirme que al menos 1 instancia muestra estado "healthy" en la columna **Estado** antes de continuar. Si después de 10 minutos ninguna instancia está "healthy", consulte la sección de Solución de Problemas.
+
 ---
 
 ## PARTE C - VERIFICACIÓN Y PRUEBAS
@@ -263,7 +331,7 @@ CloudFormation es un servicio de infraestructura como código que permite defini
 6. Pegue el nombre de DNS del ALB en la barra de direcciones
 7. Presione Enter
 
-⏱️ **Nota**: Si recibe un error de conexión, espere 1-2 minutos adicionales para que las instancias completen las comprobaciones de estado del Target Group.
+⏱️ **Nota**: Si recibe un error de conexión, verifique que completó el Paso 10.5 y que al menos una instancia está en estado "healthy" en el Target Group. Las instancias deben pasar las comprobaciones de estado antes de que el ALB pueda enrutar el tráfico.
 
 **✓ Verificación**: Debe ver la página web con el título "Workshop AWS - Aplicación de Prueba" y un formulario de entrada.
 
@@ -278,7 +346,7 @@ CloudFormation es un servicio de infraestructura como código que permite defini
 
 3. La página se recargará y debe mostrar un mensaje de confirmación
 
-**✓ Verificación**: Debe ver el mensaje "Registro guardado exitosamente" o similar.
+**✓ Verificación**: Debe ver el mensaje "Mensaje guardado exitosamente" o similar.
 
 ### Paso 13: Verificar Escritura y Lectura en RDS
 

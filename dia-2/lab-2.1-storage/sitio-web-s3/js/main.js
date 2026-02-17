@@ -150,7 +150,7 @@ setActiveNavigation();
 
 // Add console message for verification
 console.log('='.repeat(50));
-console.log('Workshop AWS BCRP - Día 1');
-console.log('Laboratorio 1.3: Almacenamiento EBS y S3');
+console.log('Workshop AWS BCRP - Día 2');
+console.log('Laboratorio 2.1: Almacenamiento EBS y S3');
 console.log('JavaScript ejecutándose correctamente');
 console.log('='.repeat(50));

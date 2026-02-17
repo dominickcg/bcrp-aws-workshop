@@ -46,17 +46,58 @@ Si encuentra un error que no está listado aquí o si las soluciones propuestas 
    ```
 2. Si aparece montado, desmóntelo primero:
    ```bash
-   sudo umount /dev/xvdf
+   sudo umount /dev/nvme1n1
    ```
+   
+   ⚠️ **Nota**: Reemplace `/dev/nvme1n1` con el nombre de su dispositivo (puede ser `/dev/xvdf` en instancias más antiguas).
+
 3. Verifique que no hay procesos usando el dispositivo:
    ```bash
-   sudo lsof /dev/xvdf
+   sudo lsof /dev/nvme1n1
    ```
 4. Si hay procesos, deténgalos antes de montar
 5. Verifique que el punto de montaje `/mnt/data_logs` existe y está vacío:
    ```bash
    ls -la /mnt/data_logs
    ```
+
+---
+
+### Error: El volumen aparece con nombre diferente (nvme1n1 vs xvdf)
+
+**Síntoma**: Al ejecutar `lsblk`, el volumen aparece como `nvme1n1` en lugar de `xvdf`, o viceversa.
+
+**Causas posibles**:
+1. Las instancias modernas con NVMe (t3, t3a, t4g, m5, c5, etc.) usan nombres de dispositivo NVMe (`nvme0n1`, `nvme1n1`, etc.)
+2. Las instancias tradicionales (t2, m4, etc.) usan nombres de dispositivo tradicionales (`xvdf`, `xvdg`, etc.)
+3. Esto es comportamiento normal y depende del tipo de instancia
+
+**Solución**:
+1. Identifique su volumen por el tamaño (1 GB) en lugar del nombre del dispositivo:
+   ```bash
+   lsblk
+   ```
+   
+   Busque el dispositivo de 1 GB sin punto de montaje (MOUNTPOINT vacío).
+
+2. Use el nombre de dispositivo correcto en todos los comandos subsiguientes:
+   - Si su dispositivo es `nvme1n1`, use `/dev/nvme1n1` en los comandos
+   - Si su dispositivo es `xvdf`, use `/dev/xvdf` en los comandos
+
+3. Ejemplos de comandos con el nombre correcto:
+   ```bash
+   # Para instancias con NVMe
+   sudo mkfs -t ext4 /dev/nvme1n1
+   sudo mount /dev/nvme1n1 /mnt/data_logs
+   sudo blkid /dev/nvme1n1
+   
+   # Para instancias tradicionales
+   sudo mkfs -t ext4 /dev/xvdf
+   sudo mount /dev/xvdf /mnt/data_logs
+   sudo blkid /dev/xvdf
+   ```
+
+**✓ Verificación**: Después de montar, ejecute `lsblk` y confirme que el volumen de 1 GB ahora muestra `/mnt/data_logs` en la columna MOUNTPOINT.
 
 ---
 
@@ -205,7 +246,7 @@ Si encuentra un error que no está listado aquí o si las soluciones propuestas 
 **Solución**:
 1. Verifique las reglas del Security Group de RDS:
    - En la consola de EC2, vaya a **Grupos de seguridad**
-   - Seleccione el Security Group de RDS (`sg-rds-{nombre-participante}`)
+   - Seleccione el Security Group de RDS (`rds-sg-{nombre-participante}`)
    - Verifique que hay una regla de entrada:
      - **Tipo**: MySQL/Aurora
      - **Puerto**: 3306
@@ -258,7 +299,7 @@ Si encuentra un error que no está listado aquí o si las soluciones propuestas 
 **Solución**:
 1. Verifique que el Security Group de las instancias web existe:
    - En la consola de EC2, vaya a **Grupos de seguridad**
-   - Busque `sg-web-{nombre-participante}`
+   - Busque `web-sg-{nombre-participante}`
    - Si no existe, créelo siguiendo las instrucciones del laboratorio
 2. Verifique que ambos Security Groups están en la misma VPC:
    - Seleccione cada Security Group
@@ -273,6 +314,79 @@ Si encuentra un error que no está listado aquí o si las soluciones propuestas 
 ---
 
 ## Laboratorio 2.3 - HA/ELB/ASG
+
+---
+
+### Error: No se puede acceder al ALB - Security Group incorrecto
+
+**Síntoma**: Al intentar acceder al DNS del ALB desde el navegador, aparece un error de timeout o "no se puede acceder al sitio".
+
+**Causas posibles**:
+1. El Security Group del ALB (`alb-sg-{nombre-participante}`) no permite tráfico HTTP desde internet
+2. Se asignó el Security Group incorrecto al ALB (por ejemplo, `web-sg` en lugar de `alb-sg`)
+
+**Solución**:
+1. Verifique el Security Group asignado al ALB:
+   - En la consola de EC2, vaya a **Balanceadores de carga**
+   - Seleccione su ALB `alb-web-{nombre-participante}`
+   - En la pestaña **Seguridad**, verifique el Security Group asignado
+   - Debe ser `alb-sg-{nombre-participante}`, NO `web-sg-{nombre-participante}`
+2. Verifique las reglas del Security Group del ALB:
+   - En EC2 > Grupos de seguridad, seleccione `alb-sg-{nombre-participante}`
+   - En la pestaña **Reglas de entrada**, verifique que tiene:
+     - **Tipo**: HTTP
+     - **Puerto**: 80
+     - **Origen**: 0.0.0.0/0 (Anywhere-IPv4)
+3. Si el Security Group es incorrecto:
+   - En la página del ALB, haga clic en **Acciones** > **Editar grupos de seguridad**
+   - Elimine el Security Group incorrecto
+   - Agregue `alb-sg-{nombre-participante}`
+   - Haga clic en **Guardar cambios**
+4. Si la regla de entrada no existe:
+   - Edite el Security Group `alb-sg-{nombre-participante}`
+   - Agregue la regla HTTP desde 0.0.0.0/0
+   - Guarde los cambios
+
+---
+
+### Error: Instancias no reciben tráfico del ALB - Security Group incorrecto
+
+**Síntoma**: El ALB está accesible pero las instancias no pasan los health checks, o el ALB devuelve error 502/503.
+
+**Causas posibles**:
+1. El Security Group de las instancias (`web-sg-{nombre-participante}`) no permite tráfico desde el ALB
+2. El Security Group de las instancias permite tráfico desde 0.0.0.0/0 pero no desde el Security Group del ALB
+3. Se configuró incorrectamente la regla de entrada en `web-sg`
+
+**Solución**:
+1. Verifique el Security Group de las instancias:
+   - En EC2 > Grupos de Auto Scaling, seleccione su ASG
+   - En la pestaña **Detalles**, verifique el Launch Template
+   - Haga clic en el Launch Template y verifique el Security Group
+   - Debe ser `web-sg-{nombre-participante}`
+2. Verifique las reglas del Security Group de las instancias:
+   - En EC2 > Grupos de seguridad, seleccione `web-sg-{nombre-participante}`
+   - En la pestaña **Reglas de entrada**, verifique que tiene:
+     - **Tipo**: HTTP
+     - **Puerto**: 80
+     - **Origen**: `alb-sg-{nombre-participante}` (debe mostrar el ID del Security Group del ALB)
+3. Si la regla permite 0.0.0.0/0 en lugar del Security Group del ALB:
+   - Esto funciona pero NO es una best practice de seguridad
+   - Para seguir el principio de mínimo privilegio, edite la regla:
+     - Elimine la regla que permite 0.0.0.0/0
+     - Agregue una nueva regla con origen `alb-sg-{nombre-participante}`
+4. Si la regla no existe:
+   - Edite el Security Group `web-sg-{nombre-participante}`
+   - Agregue la regla HTTP con origen `alb-sg-{nombre-participante}`
+   - Guarde los cambios
+5. Espere 2-3 minutos para que las instancias pasen los health checks
+
+**✓ Verificación de arquitectura de seguridad correcta**:
+- `alb-sg-{nombre-participante}`: Permite HTTP (80) desde 0.0.0.0/0
+- `web-sg-{nombre-participante}`: Permite HTTP (80) SOLO desde `alb-sg-{nombre-participante}`
+- `rds-sg-{nombre-participante}`: Permite MySQL (3306) SOLO desde `web-sg-{nombre-participante}`
+
+---
 
 ### Error: CloudFormation stack en estado ROLLBACK_COMPLETE
 
@@ -342,7 +456,73 @@ Si encuentra un error que no está listado aquí o si las soluciones propuestas 
 
 ---
 
+### Error: 503 Service Unavailable o 504 Gateway Timeout al acceder al ALB
+
+**Síntoma**: Al acceder al DNS del ALB, recibe error 503 o 504.
+
+**Causas posibles**:
+1. Las instancias aún no han pasado los health checks del Target Group
+2. Apache no ha iniciado correctamente en las instancias
+3. Security Group no permite tráfico HTTP
+
+**Solución**:
+1. Espere 3-5 minutos adicionales. Las instancias pueden tardar varios minutos en pasar los health checks después de lanzarse
+2. Verifique el estado del Target Group:
+   - En la consola de EC2, vaya a **Grupos de destino**
+   - Seleccione su Target Group
+   - Vaya a la pestaña **Destinos**
+   - Verifique que al menos 1 instancia está en estado **healthy** (saludable)
+3. Si después de 10 minutos ninguna instancia está healthy:
+   - Conéctese por SSH a una de las instancias
+   - Revise los logs de UserData:
+     ```bash
+     sudo cat /var/log/cloud-init-output.log
+     ```
+   - Busque errores en la instalación de Apache o en la configuración de la aplicación
+4. Verifique el Security Group de las instancias:
+   - Debe permitir tráfico HTTP (puerto 80) desde el Security Group del ALB o desde 0.0.0.0/0
+5. Una vez que al menos una instancia esté healthy, intente acceder al DNS del ALB nuevamente
+
+---
+
 ### Error: No se puede acceder a la aplicación web
+
+**Síntoma**: Al acceder al DNS del ALB en el navegador, aparece un error 502 Bad Gateway, 503 Service Unavailable, o timeout.
+
+**Causas posibles**:
+1. El Security Group de las instancias EC2 no permite tráfico HTTP (puerto 80)
+2. Las instancias no han pasado el health check del Target Group
+3. Apache no está corriendo en las instancias
+4. SELinux está bloqueando las conexiones de red desde PHP
+5. Las instancias están en subredes sin acceso a internet
+
+**Solución**:
+1. Verifique el Security Group de las instancias:
+   - En EC2 > Grupos de seguridad, seleccione `web-sg-{nombre-participante}`
+   - Verifique que tiene una regla de entrada para HTTP (puerto 80) desde 0.0.0.0/0
+   - Si no existe, agregue la regla:
+     - Tipo: HTTP
+     - Puerto: 80
+     - Origen: 0.0.0.0/0
+2. Verifique el estado del Target Group:
+   - En EC2 > Grupos de destino, seleccione su Target Group
+   - En la pestaña **Destinos**, verifique que las instancias están en estado **healthy**
+   - Si están **unhealthy**, espere 2-3 minutos para que pasen el health check
+3. Si las instancias siguen unhealthy después de 5 minutos:
+   - Conéctese por SSH a una de las instancias
+   - Verifique que Apache está corriendo: `sudo systemctl status httpd`
+   - Si no está corriendo, inícielo: `sudo systemctl start httpd`
+   - Verifique los logs: `sudo tail -f /var/log/user-data.log`
+4. Verifique SELinux:
+   - Conéctese por SSH a una instancia
+   - Ejecute: `sudo setsebool -P httpd_can_network_connect 1`
+   - Ejecute: `sudo setsebool -P httpd_can_network_connect_db 1`
+   - Reinicie Apache: `sudo systemctl restart httpd`
+5. Si el problema persiste, elimine la pila de CloudFormation y vuélvala a crear con los parámetros correctos
+
+---
+
+### Error: No se puede acceder a la aplicación web (continuación)
 
 **Síntoma**: Al intentar acceder al DNS del ALB en el navegador, aparece un error de timeout, "no se puede acceder al sitio" o "ERR_CONNECTION_TIMED_OUT".
 

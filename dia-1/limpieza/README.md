@@ -23,7 +23,7 @@ Los siguientes recursos **DEBEN permanecer activos** para las actividades del D�
 | **Subred Pública** | Subnet-Public-{tu-nombre} | Necesaria para laboratorios del Día 2 |
 | **Subred Privada** | Subnet-Private-{tu-nombre} | Necesaria para laboratorios del Día 2 |
 | **Tabla de Ruteo** | RTB-Public-{tu-nombre} | Necesaria para conectividad de red |
-| **Grupo de Seguridad** | Web-Server-SG-{tu-nombre} | Necesario para instancia EC2 |
+| **Grupo de Seguridad** | web-sg-{tu-nombre} | Necesario para instancia EC2 |
 | **Instancia EC2** | ec2-webserver-{tu-nombre} | Necesaria para laboratorios del Día 2 |
 | **Par de Claves** | ec2-keypair-{tu-nombre} | Necesario para acceso SSH |
 | **Volumen EBS** | ebs-data-{tu-nombre} | Necesario para laboratorios del Día 2 |
@@ -147,7 +147,7 @@ Sigue los pasos de la **Opción 1** anterior.
 **⏱️ Tiempo estimado: 2 minutos**
 
 1. En el panel de navegación izquierdo de EC2, haz clic en **Grupos de seguridad** (bajo **Red y seguridad**)
-2. Selecciona tu grupo de seguridad `Web-Server-SG-{tu-nombre}`
+2. Selecciona tu grupo de seguridad `web-sg-{tu-nombre}`
 3. Haz clic en **Acciones** → **Eliminar grupos de seguridad**
 4. Confirma la eliminación
 

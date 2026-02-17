@@ -131,42 +131,77 @@ El comando `lsblk` lista todos los dispositivos de bloques disponibles en el sis
    lsblk
    ```
 
-2. Identifique el nuevo volumen en la salida. Debería ver algo similar a:
+2. Identifique el nuevo volumen en la salida. La salida variará según el tipo de instancia:
+
+   **Instancias con NVMe (t3, t3a, t4g, m5, c5, etc.):**
+   ```
+   NAME          MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+   nvme0n1       259:0    0   8G  0 disk 
+   ├─nvme0n1p1   259:1    0   8G  0 part /
+   ├─nvme0n1p127 259:2    0   1M  0 part 
+   └─nvme0n1p128 259:3    0  10M  0 part /boot/efi
+   nvme1n1       259:4    0   1G  0 disk
+   ```
+   En este caso, `nvme1n1` es el nuevo volumen de 1 GB.
+
+   **Instancias tradicionales (t2, m4, etc.):**
    ```
    NAME    MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
    xvda    202:0    0   8G  0 disk 
    └─xvda1 202:1    0   8G  0 part /
    xvdf    202:80   0   1G  0 disk
    ```
+   En este caso, `xvdf` es el nuevo volumen de 1 GB.
 
-   En este ejemplo, `xvdf` es el nuevo volumen de 1 GB que acabamos de adjuntar.
-
-⚠️ **Nota**: El nombre del dispositivo puede variar (`xvdf`, `nvme1n1`, etc.) dependiendo del tipo de instancia. Use el tamaño (1G) para identificarlo.
+⚠️ **Importante**: Identifique su volumen por el tamaño (1G) y porque NO tiene punto de montaje (MOUNTPOINT vacío). Anote el nombre del dispositivo, lo necesitará en los siguientes pasos.
 
 **✓ Verificación**: Confirme que ve un dispositivo de 1 GB sin punto de montaje (MOUNTPOINT vacío).
 
-### Paso 6: Formatear Volumen
+### Paso 6: Verificar si el Volumen Necesita Formato
 
-Los volúmenes EBS nuevos no tienen sistema de archivos. Debemos formatearlos antes de usarlos.
+Antes de formatear, debemos verificar si el volumen ya tiene un sistema de archivos.
+
+1. Verifique si el volumen tiene un sistema de archivos existente:
+   ```bash
+   sudo file -s /dev/nvme1n1
+   ```
+   
+   ⚠️ **Importante**: Reemplace `/dev/nvme1n1` con el nombre de dispositivo que identificó en el Paso 5.
+
+2. Interprete la salida:
+   - Si ve `data`, el volumen está vacío y necesita formato
+   - Si ve información sobre un sistema de archivos (ext4, xfs, etc.), el volumen ya está formateado
+
+**✓ Verificación**: Anote si el volumen necesita formato o ya está formateado.
+
+### Paso 7: Formatear Volumen (si es necesario)
+
+Si el volumen mostró `data` en el paso anterior, debe formatearlo. Si ya tiene un sistema de archivos, **omita este paso**.
 
 1. Formatee el volumen con el sistema de archivos ext4:
    ```bash
-   sudo mkfs -t ext4 /dev/xvdf
+   sudo mkfs -t ext4 /dev/nvme1n1
    ```
 
-   ⚠️ **Importante**: Reemplace `/dev/xvdf` con el nombre de dispositivo que identificó en el paso anterior.
+   ⚠️ **Importante**: 
+   - Reemplace `/dev/nvme1n1` con el nombre de dispositivo que identificó en el Paso 5
+   - Este comando BORRARÁ todos los datos del volumen. Solo úselo en volúmenes nuevos o vacíos
 
 2. El comando mostrará una salida similar a:
    ```
    mke2fs 1.45.6 (20-Mar-2020)
    Creating filesystem with 262144 4k blocks and 65536 inodes
+   Filesystem UUID: 12345678-1234-1234-1234-123456789abc
    ...
+   Allocating group tables: done
+   Writing inode tables: done
+   Creating journal (4096 blocks): done
    Writing superblocks and filesystem accounting information: done
    ```
 
 **✓ Verificación**: El comando debe completarse sin errores y mostrar "done" al final.
 
-### Paso 7: Crear Punto de Montaje y Montar Volumen
+### Paso 8: Crear Punto de Montaje y Montar Volumen
 
 Un punto de montaje es un directorio donde se accederá al contenido del volumen.
 
@@ -177,8 +212,10 @@ Un punto de montaje es un directorio donde se accederá al contenido del volumen
 
 2. Monte el volumen en el punto de montaje:
    ```bash
-   sudo mount /dev/xvdf /mnt/data_logs
+   sudo mount /dev/nvme1n1 /mnt/data_logs
    ```
+   
+   ⚠️ **Importante**: Reemplace `/dev/nvme1n1` con el nombre de dispositivo que identificó en el Paso 5.
 
 3. Verifique que el volumen está montado correctamente:
    ```bash
@@ -188,52 +225,89 @@ Un punto de montaje es un directorio donde se accederá al contenido del volumen
    Debería ver una línea similar a:
    ```
    Filesystem      Size  Used Avail Use% Mounted on
-   /dev/xvdf       974M   24K  907M   1% /mnt/data_logs
+   /dev/nvme1n1    974M   24K  907M   1% /mnt/data_logs
    ```
 
-**✓ Verificación**: Confirme que `/mnt/data_logs` aparece en la salida de `df -h` con aproximadamente 1 GB de espacio disponible.
+4. También puede verificar con `lsblk`:
+   ```bash
+   lsblk
+   ```
+   
+   Ahora debería ver el punto de montaje en la columna MOUNTPOINT:
+   ```
+   NAME          MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+   nvme0n1       259:0    0   8G  0 disk 
+   ├─nvme0n1p1   259:1    0   8G  0 part /
+   ├─nvme0n1p127 259:2    0   1M  0 part 
+   └─nvme0n1p128 259:3    0  10M  0 part /boot/efi
+   nvme1n1       259:4    0   1G  0 disk /mnt/data_logs
+   ```
 
-### Paso 8: Configurar Montaje Permanente
+**✓ Verificación**: Confirme que:
+- `/mnt/data_logs` aparece en la salida de `df -h` con aproximadamente 1 GB de espacio disponible
+- `lsblk` muestra `/mnt/data_logs` en la columna MOUNTPOINT del volumen de 1 GB
+
+### Paso 9: Configurar Montaje Permanente
 
 El montaje actual es temporal y se perderá al reiniciar la instancia. Para hacerlo permanente, debemos editar el archivo `/etc/fstab`.
 
 1. Primero, obtenga el UUID del volumen:
    ```bash
-   sudo blkid /dev/xvdf
+   sudo blkid /dev/nvme1n1
    ```
+   
+   ⚠️ **Importante**: Reemplace `/dev/nvme1n1` con el nombre de dispositivo que identificó en el Paso 5.
 
    La salida será similar a:
    ```
-   /dev/xvdf: UUID="12345678-1234-1234-1234-123456789abc" TYPE="ext4"
+   /dev/nvme1n1: UUID="12345678-1234-1234-1234-123456789abc" TYPE="ext4"
    ```
 
-   Copie el valor del UUID (sin las comillas).
+   Copie el valor del UUID (sin las comillas). Por ejemplo: `12345678-1234-1234-1234-123456789abc`
 
-2. Edite el archivo `/etc/fstab`:
+2. Cree una copia de seguridad del archivo `/etc/fstab` antes de editarlo:
+   ```bash
+   sudo cp /etc/fstab /etc/fstab.backup
+   ```
+
+3. Edite el archivo `/etc/fstab`:
    ```bash
    sudo nano /etc/fstab
    ```
 
-3. Agregue la siguiente línea al final del archivo (reemplace el UUID con el suyo):
+4. Agregue la siguiente línea al final del archivo (reemplace el UUID con el suyo):
    ```
    UUID=12345678-1234-1234-1234-123456789abc  /mnt/data_logs  ext4  defaults,nofail  0  2
    ```
 
-4. Guarde el archivo:
+   ⚠️ **Importante**: 
+   - Asegúrese de reemplazar el UUID con el valor que copió en el Paso 1
+   - La opción `nofail` permite que el sistema arranque incluso si el volumen no está disponible
+
+5. Guarde el archivo:
    - Presione `Ctrl + O` para guardar
    - Presione `Enter` para confirmar
    - Presione `Ctrl + X` para salir
 
-5. Verifique que la configuración es correcta:
+6. Verifique que la configuración es correcta:
    ```bash
    sudo mount -a
    ```
 
    Si no hay errores, la configuración es correcta.
 
-**✓ Verificación**: El comando `sudo mount -a` debe ejecutarse sin errores.
+7. Verifique que el montaje persiste después de desmontar y volver a montar:
+   ```bash
+   sudo umount /mnt/data_logs
+   sudo mount -a
+   df -h | grep data_logs
+   ```
 
-### Paso 9: Probar con Archivo de Prueba
+**✓ Verificación**: 
+- El comando `sudo mount -a` debe ejecutarse sin errores
+- El comando `df -h | grep data_logs` debe mostrar el volumen montado en `/mnt/data_logs`
+
+### Paso 10: Probar con Archivo de Prueba
 
 Vamos a verificar que el volumen funciona correctamente creando un archivo de prueba.
 
@@ -263,7 +337,7 @@ Vamos a verificar que el volumen funciona correctamente creando un archivo de pr
 
 ## PARTE B - Almacenamiento S3 y Hosting Estático
 
-### Paso 10: Crear Bucket S3
+### Paso 11: Crear Bucket S3
 
 Amazon S3 organiza los objetos en contenedores llamados "buckets". Los nombres de bucket deben ser únicos globalmente en toda AWS.
 
@@ -286,7 +360,7 @@ Amazon S3 organiza los objetos en contenedores llamados "buckets". Los nombres d
 - La columna **Región** muestra la región correcta
 - El bucket está accesible (sin errores de permisos)
 
-### Paso 11: Habilitar Hosting de Sitio Web Estático
+### Paso 12: Habilitar Hosting de Sitio Web Estático
 
 S3 puede servir sitios web estáticos directamente, sin necesidad de un servidor web tradicional.
 
@@ -308,18 +382,17 @@ S3 puede servir sitios web estáticos directamente, sin necesidad de un servidor
 - La sección **Alojamiento de sitios web estáticos** muestra el estado **Habilitado**
 - Tiene copiada la URL del punto de enlace del sitio web
 
-### Paso 12: Descargar Archivos del Sitio Web
+### Paso 13: Descargar Archivos del Sitio Web
 
-Para este laboratorio, utilizaremos un sitio web de ejemplo que ya está disponible en el repositorio del workshop.
+Para este laboratorio, utilizaremos un sitio web de ejemplo que está disponible en la carpeta `sitio-web-s3/` de este laboratorio.
 
-1. Abra una nueva pestaña en su navegador
-2. Navegue al repositorio del workshop en GitHub (el instructor proporcionará la URL)
-3. Localice la carpeta `dia-1/lab-1.3-storage/sitio-web-s3/`
-4. Haga clic en el botón verde **Code** y seleccione **Download ZIP**
+1. Localice la carpeta `sitio-web-s3/` en este mismo directorio del laboratorio
+   - Ruta completa: `dia-2/lab-2.1-storage/sitio-web-s3/`
+2. Esta carpeta contiene todos los archivos necesarios para el sitio web
 5. Extraiga el archivo ZIP en su computadora local
 6. Navegue a la carpeta extraída y localice la carpeta `sitio-web-s3/`
 
-**✓ Verificación**: Confirme que tiene los siguientes archivos y carpetas:
+**✓ Verificación**: Confirme que tiene los siguientes archivos y carpetas en `sitio-web-s3/`:
 - `index.html` (archivo principal)
 - `about.html` (página adicional)
 - `error.html` (página de error personalizada)
@@ -327,7 +400,7 @@ Para este laboratorio, utilizaremos un sitio web de ejemplo que ya está disponi
 - `js/` (carpeta con scripts)
 - `assets/` (carpeta con imágenes)
 
-### Paso 13: Cargar Archivos al Bucket
+### Paso 14: Cargar Archivos al Bucket
 
 Ahora cargaremos los archivos del sitio web al bucket S3, manteniendo la estructura de carpetas correcta.
 
@@ -360,7 +433,7 @@ Ahora cargaremos los archivos del sitio web al bucket S3, manteniendo la estruct
 - Las tres carpetas (`css/`, `js/`, `assets/`) aparecen en la raíz
 - No hay errores de carga
 
-### Paso 14: Aplicar Política de Bucket para Acceso Público
+### Paso 15: Aplicar Política de Bucket para Acceso Público
 
 Para que el sitio web sea accesible públicamente, debemos aplicar una política de bucket que permita lectura pública de los objetos.
 
@@ -381,7 +454,7 @@ Para que el sitio web sea accesible públicamente, debemos aplicar una política
 - La política se guardó sin errores
 - La sección **Política del bucket** muestra el contenido de la política
 
-### Paso 15: Verificar Sitio Web Funcionando
+### Paso 16: Verificar Sitio Web Funcionando
 
 Ahora vamos a verificar que el sitio web está accesible públicamente.
 
@@ -394,7 +467,7 @@ Ahora vamos a verificar que el sitio web está accesible públicamente.
 - Ve el contenido de `index.html` con estilos aplicados
 - No hay errores de "Access Denied" o "404 Not Found"
 
-### Paso 16: Verificar JavaScript Ejecutándose
+### Paso 17: Verificar JavaScript Ejecutándose
 
 Vamos a verificar que los archivos JavaScript se cargan y ejecutan correctamente.
 
@@ -410,7 +483,7 @@ Vamos a verificar que los archivos JavaScript se cargan y ejecutan correctamente
 - No hay errores en la consola del navegador relacionados con archivos `.js`
 - Los elementos interactivos funcionan correctamente
 
-### Paso 17: Verificar Navegación Entre Páginas
+### Paso 18: Verificar Navegación Entre Páginas
 
 Vamos a verificar que la navegación entre páginas funciona correctamente.
 
@@ -423,7 +496,7 @@ Vamos a verificar que la navegación entre páginas funciona correctamente.
 - Los estilos CSS se aplican correctamente
 - Puede navegar de regreso a la página principal
 
-### Paso 18: Verificar Página de Error Personalizada
+### Paso 19: Verificar Página de Error Personalizada
 
 Finalmente, vamos a verificar que la página de error personalizada funciona correctamente.
 

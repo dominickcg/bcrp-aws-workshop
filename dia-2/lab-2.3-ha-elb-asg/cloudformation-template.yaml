@@ -18,7 +18,7 @@ Parameters:
     
   SecurityGroupId:
     Type: String
-    Description: ID del Security Group para las instancias EC2 (sg-xxxxx)
+    Description: ID del Security Group para las instancias EC2 (web-sg-{nombre-participante}). Este SG debe permitir tráfico HTTP solo desde el ALB.
     
   TargetGroupArn:
     Type: String
@@ -40,16 +40,25 @@ Resources:
       LaunchTemplateData:
         ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
         InstanceType: t3.micro
+        # Security Group para instancias EC2 - debe permitir tráfico HTTP solo desde el ALB
         SecurityGroupIds:
           - !Ref SecurityGroupId
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
+            # Log de inicio
+            exec > >(tee /var/log/user-data.log)
+            exec 2>&1
+            
+            echo "Iniciando configuración de instancia..."
+            
             # Actualizar sistema
             yum update -y
             
             # Instalar Apache y PHP
             yum install -y httpd php php-mysqlnd
+            
+            echo "Apache y PHP instalados correctamente"
             
             # Crear directorio de aplicación
             mkdir -p /var/www/html
@@ -371,9 +380,23 @@ Resources:
             chown -R apache:apache /var/www/html
             chmod -R 755 /var/www/html
             
+            echo "Archivos creados y permisos configurados"
+            
+            # Configurar SELinux para permitir conexiones de red desde PHP
+            setsebool -P httpd_can_network_connect 1
+            setsebool -P httpd_can_network_connect_db 1
+            
+            echo "SELinux configurado"
+            
             # Iniciar y habilitar Apache
             systemctl start httpd
             systemctl enable httpd
+            
+            # Verificar que Apache está corriendo
+            systemctl status httpd
+            
+            echo "Apache iniciado y habilitado"
+            echo "Configuración completada exitosamente"
 
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup

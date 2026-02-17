@@ -11,7 +11,8 @@
   - [Paso 2: Crear Grupo de Subredes de RDS](#paso-2-crear-grupo-de-subredes-de-rds)
   - [Paso 3: Agregar Subred Privada del Participante](#paso-3-agregar-subred-privada-del-participante)
   - [Paso 4: Agregar Subred Privada de Respaldo](#paso-4-agregar-subred-privada-de-respaldo)
-  - [Paso 5: Crear Security Group para Instancias Web](#paso-5-crear-security-group-para-instancias-web)
+  - [Paso 5: Crear Security Group para Application Load Balancer](#paso-5-crear-security-group-para-application-load-balancer)
+  - [Paso 5.5: Crear Security Group para Instancias Web](#paso-55-crear-security-group-para-instancias-web)
   - [Paso 6: Crear Security Group para RDS](#paso-6-crear-security-group-para-rds)
   - [Paso 7: Configurar Regla de Entrada MySQL](#paso-7-configurar-regla-de-entrada-mysql)
   - [Paso 8: Crear Instancia RDS MySQL](#paso-8-crear-instancia-rds-mysql)
@@ -49,6 +50,11 @@ Antes de comenzar este laboratorio, debes tener:
 - **Información de la subred privada**: Anota el ID de tu subred privada del Día 1
 
 ⚠️ **Recursos Compartidos del Instructor**: El instructor proporcionará una subred privada de respaldo en una zona de disponibilidad diferente. NO modifiques recursos que no tengan tu nombre de participante.
+
+**Nota sobre Security Groups**: En este laboratorio crearás tres Security Groups que se utilizarán en el Lab 2.3:
+- `alb-sg-{nombre-participante}`: Para el Application Load Balancer (acepta tráfico de internet)
+- `web-sg-{nombre-participante}`: Para las instancias web (acepta tráfico solo del ALB)
+- `rds-sg-{nombre-participante}`: Para la base de datos RDS (acepta tráfico solo de las instancias web)
 
 ## Instrucciones
 
@@ -101,23 +107,47 @@ Para habilitar Multi-AZ, necesitas una segunda subred en una zona de disponibili
 
 ⏱️ **Nota**: La creación del Grupo de subredes es instantánea.
 
-### Paso 5: Crear Security Group para Instancias Web
+### Paso 5: Crear Security Group para Application Load Balancer
 
-Antes de crear el Security Group para RDS, crearemos un Security Group para las instancias web que se conectarán a la base de datos en el Lab 2.3.
+Crearemos un Security Group para el Application Load Balancer que recibirá tráfico HTTP desde internet.
 
 1. En la barra de búsqueda global, escriba **EC2** y haga clic en el servicio
 2. En el panel de navegación de la izquierda, desplácese hasta **Red y seguridad** y haga clic en **Grupos de seguridad**
 3. Haga clic en el botón naranja **Crear grupo de seguridad**
 4. Configure los siguientes parámetros:
-   - **Nombre del grupo de seguridad**: `sg-web-{nombre-participante}`
-   - **Descripción**: `Security Group para instancias web`
+   - **Nombre del grupo de seguridad**: `alb-sg-{nombre-participante}`
+   - **Descripción**: `Security Group para Application Load Balancer`
    - **VPC**: Seleccione la VPC compartida del workshop
 5. En la sección **Reglas de entrada**, haga clic en **Agregar regla**:
    - **Tipo**: HTTP
    - **Origen**: Anywhere-IPv4 (0.0.0.0/0)
 6. Haga clic en el botón naranja **Crear grupo de seguridad**
 
-**✓ Verificación**: Confirme que el Security Group `sg-web-{nombre-participante}` aparece en la lista con una regla de entrada para HTTP (puerto 80).
+**✓ Verificación**: Confirme que el Security Group `alb-sg-{nombre-participante}` aparece en la lista con una regla de entrada para HTTP (puerto 80) desde 0.0.0.0/0.
+
+### Paso 5.5: Crear Security Group para Instancias Web
+
+Ahora crearemos un Security Group separado para las instancias web que solo aceptará tráfico desde el Application Load Balancer.
+
+**¿Por qué Security Groups separados?** Siguiendo el principio de mínimo privilegio, las instancias web no deben aceptar tráfico directo desde internet. Solo el ALB debe ser accesible públicamente, y las instancias solo deben aceptar tráfico del ALB. Esto mejora la seguridad de la arquitectura.
+
+1. En la página de Grupos de seguridad, haga clic en el botón naranja **Crear grupo de seguridad**
+2. Configure los siguientes parámetros:
+   - **Nombre del grupo de seguridad**: `web-sg-{nombre-participante}`
+   - **Descripción**: `Security Group para instancias web`
+   - **VPC**: Seleccione la VPC compartida del workshop
+3. En la sección **Reglas de entrada**, haga clic en **Agregar regla**:
+   - **Tipo**: HTTP
+   - **Origen**: Personalizado
+   - En el campo de búsqueda, escriba `alb-sg-{nombre-participante}` y seleccione su Security Group del ALB
+4. Haga clic en el botón naranja **Crear grupo de seguridad**
+
+**✓ Verificación**: Confirme que el Security Group `web-sg-{nombre-participante}` aparece en la lista con una regla de entrada para HTTP (puerto 80) desde `alb-sg-{nombre-participante}` (NO desde 0.0.0.0/0).
+
+**Arquitectura de seguridad**:
+- `alb-sg-{nombre-participante}`: Acepta HTTP desde internet (0.0.0.0/0)
+- `web-sg-{nombre-participante}`: Acepta HTTP solo desde `alb-sg-{nombre-participante}`
+- `rds-sg-{nombre-participante}`: Acepta MySQL solo desde `web-sg-{nombre-participante}`
 
 ### Paso 6: Crear Security Group para RDS
 
@@ -125,33 +155,33 @@ Ahora crearemos el Security Group que controlará el acceso a la base de datos R
 
 1. En la página de Grupos de seguridad, haga clic en el botón naranja **Crear grupo de seguridad**
 2. Configure los siguientes parámetros:
-   - **Nombre del grupo de seguridad**: `sg-rds-{nombre-participante}`
+   - **Nombre del grupo de seguridad**: `rds-sg-{nombre-participante}`
    - **Descripción**: `Security Group para RDS MySQL`
    - **VPC**: Seleccione la VPC compartida del workshop
 3. Por ahora, NO agregue reglas de entrada (las configuraremos en el siguiente paso)
 4. Haga clic en el botón naranja **Crear grupo de seguridad**
 
-**✓ Verificación**: Confirme que el Security Group `sg-rds-{nombre-participante}` aparece en la lista.
+**✓ Verificación**: Confirme que el Security Group `rds-sg-{nombre-participante}` aparece en la lista.
 
 ### Paso 7: Configurar Regla de Entrada MySQL
 
 Ahora configuraremos el Security Group de RDS para permitir conexiones MySQL solo desde las instancias web.
 
-1. En la lista de Grupos de seguridad, seleccione `sg-rds-{nombre-participante}` (haga clic en el nombre)
+1. En la lista de Grupos de seguridad, seleccione `rds-sg-{nombre-participante}` (haga clic en el nombre)
 2. En la parte inferior, haga clic en la pestaña **Reglas de entrada**
 3. Haga clic en el botón **Editar reglas de entrada**
 4. Haga clic en **Agregar regla** y configure:
    - **Tipo**: MySQL/Aurora (puerto 3306 se selecciona automáticamente)
    - **Origen**: Personalizado
-   - En el campo de búsqueda, escriba `sg-web-{nombre-participante}` y seleccione su Security Group de instancias web
+   - En el campo de búsqueda, escriba `web-sg-{nombre-participante}` y seleccione su Security Group de instancias web
 5. Haga clic en el botón naranja **Guardar reglas**
 
 **✓ Verificación**: Confirme que la regla de entrada muestra:
 - **Tipo**: MySQL/Aurora
 - **Puerto**: 3306
-- **Origen**: sg-web-{nombre-participante}
+- **Origen**: web-sg-{nombre-participante}
 
-**¿Por qué usar un Security Group como origen?** Al especificar un Security Group como origen, cualquier instancia EC2 que tenga asignado el Security Group `sg-web-{nombre-participante}` podrá conectarse a la base de datos. Esto es más seguro y flexible que especificar direcciones IP individuales.
+**¿Por qué usar un Security Group como origen?** Al especificar un Security Group como origen, cualquier instancia EC2 que tenga asignado el Security Group `web-sg-{nombre-participante}` podrá conectarse a la base de datos. Esto es más seguro y flexible que especificar direcciones IP individuales.
 
 ### Paso 8: Crear Instancia RDS MySQL
 
@@ -208,12 +238,12 @@ Continúe configurando los parámetros de la instancia RDS:
    - **Grupo de subredes de base de datos**: Seleccione `rds-subnet-group-{nombre-participante}`
    - **Acceso público**: No
    - **Grupo de seguridad de VPC**: Seleccione **Elegir existente**
-   - En la lista, seleccione `sg-rds-{nombre-participante}` y elimine el grupo "default" si aparece
+   - En la lista, seleccione `rds-sg-{nombre-participante}` y elimine el grupo "default" si aparece
 
 **Configuración adicional**:
    - Expanda la sección **Configuración adicional**
    - **Nombre de base de datos inicial**: `workshopdb`
-   - **Desmarque** la opción "Habilitar copias de seguridad automatizadas" (para simplificar el workshop)
+   - **Desmarque** la opción "Activar copia de seguridad automatizada" (para simplificar el workshop)
    - **Desmarque** la opción "Habilitar cifrado" (opcional para el workshop)
 
 5. Desplácese hasta el final de la página y haga clic en el botón naranja **Crear base de datos**
@@ -251,7 +281,7 @@ Nombre de base de datos: workshopdb
 - **Multi-AZ**: Sí
 - **Punto de enlace**: Visible y copiado
 - **Grupo de subredes**: rds-subnet-group-{nombre-participante}
-- **Grupos de seguridad de VPC**: sg-rds-{nombre-participante}
+- **Grupos de seguridad de VPC**: rds-sg-{nombre-participante}
 
 ## Resumen del Laboratorio
 
@@ -291,8 +321,9 @@ Si encuentra dificultades durante este laboratorio, consulte la [Guía de Soluci
 
 **Recursos creados en este laboratorio**:
 - Grupo de subredes de RDS: `rds-subnet-group-{nombre-participante}`
-- Security Group web: `sg-web-{nombre-participante}`
-- Security Group RDS: `sg-rds-{nombre-participante}`
+- Security Group ALB: `alb-sg-{nombre-participante}`
+- Security Group web: `web-sg-{nombre-participante}`
+- Security Group RDS: `rds-sg-{nombre-participante}`
 - Instancia RDS: `rds-mysql-{nombre-participante}`
 
 **Limpieza opcional**: Si desea eliminar estos recursos al finalizar el workshop completo, consulte la [Guía de Limpieza](../limpieza/README.md) que proporciona instrucciones detalladas en el orden correcto de eliminación.

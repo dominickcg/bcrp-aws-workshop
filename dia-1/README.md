@@ -9,11 +9,9 @@ Bienvenido al primer día del Workshop AWS. En este día aprenderás los fundame
 | 10:00 - 10:15 | Introducción | 15 min |
 | 10:15 - 11:05 | Lab 1.1: VPC y Subredes | 50 min |
 | 11:05 - 11:55 | Lab 1.2: Despliegue de EC2 | 50 min |
-| 11:55 - 12:00 | Break | 5 min |
-| 12:00 - 12:50 | Lab 1.3: Almacenamiento EBS y S3 | 50 min |
-| 12:50 - 13:00 | Revisión y preguntas | 10 min |
+| 11:55 - 12:00 | Revisión y preguntas | 5 min |
 
-**Duración total:** 3 horas (180 minutos)
+**Duración total:** 2 horas (120 minutos)
 
 ## Conceptos Clave
 
@@ -90,7 +88,6 @@ S3 es un servicio de almacenamiento de objetos que ofrece escalabilidad, disponi
 |-----|--------|-------------|----------|
 | 1.1 | [VPC y Subredes](./lab-1.1-vpc/README.md) | Configuración de red virtual, subredes y enrutamiento | 50 min |
 | 1.2 | [Despliegue de EC2](./lab-1.2-ec2/README.md) | Lanzamiento de instancia EC2 con servidor web Apache | 50 min |
-| 1.3 | [Almacenamiento EBS y S3](./lab-1.3-storage/README.md) | Volúmenes de bloques y hosting de sitio web estático | 50 min |
 
 ## Prerrequisitos
 
@@ -131,7 +128,7 @@ Todos los recursos que crees deben seguir este formato:
 | Subred pública | `subnet-publica-luis` |
 | Subred privada | `subnet-privada-luis` |
 | Tabla de ruteo | `rtb-publica-maria` |
-| Security Group | `Web-Server-SG-carlos` |
+| Security Group | `web-sg-carlos` |
 | Instancia EC2 | `ec2-webserver-ana` |
 | Par de claves | `keypair-pedro` |
 | Volumen EBS | `ebs-data-sofia` |

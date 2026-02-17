@@ -67,7 +67,7 @@ Y para el favicon, puede omitir temporalmente la línea:
 
 ## Nota para el Laboratorio
 
-Durante el Laboratorio 1.3, los participantes pueden:
+Durante el Laboratorio 2.1, los participantes pueden:
 1. Usar el archivo SVG directamente (modificando las referencias HTML)
 2. Descargar imágenes PNG/ICO pre-generadas si el instructor las proporciona
 3. Crear sus propias imágenes siguiendo las especificaciones anteriores

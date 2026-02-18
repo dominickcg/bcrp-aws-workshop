@@ -428,6 +428,8 @@ Si encuentra un error que no está listado aquí o si las soluciones propuestas 
 2. El Security Group no permite tráfico HTTP (puerto 80) desde el ALB
 3. La aplicación web tiene errores y no responde
 4. El health check del Target Group está configurado incorrectamente
+5. Health check path configurado incorrectamente (debe ser /health.php)
+6. HealthCheckGracePeriod muy corto para el tiempo de instalación
 
 **Solución**:
 1. Verifique el estado de las instancias en el Target Group:
@@ -452,7 +454,51 @@ Si encuentra un error que no está listado aquí o si las soluciones propuestas 
 6. Verifique la configuración del health check:
    - En el Target Group, vaya a la pestaña **Comprobaciones de estado**
    - Verifique que el **Puerto** es 80 y el **Protocolo** es HTTP
-   - Verifique que la **Ruta** es `/` o `/index.php`
+   - Verifique que la **Ruta** es `/health.php` (NO `/` o `/index.php`)
+7. Verificar que el Target Group usa /health.php como ruta de health check:
+   - Si la ruta es diferente, edite el Target Group
+   - Cambie la ruta a `/health.php`
+   - Guarde los cambios y espere 2-3 minutos
+8. Verificar que HealthCheckGracePeriod es 600 segundos en la plantilla CloudFormation:
+   - Abra la plantilla CloudFormation que usó
+   - Busque la propiedad `HealthCheckGracePeriod` en el recurso AutoScalingGroup
+   - Debe ser 600 (10 minutos), no 300 (5 minutos)
+   - Si es 300, actualice la plantilla y vuelva a desplegar la pila
+
+---
+
+### Error: Instancias se terminan y relanzan continuamente (ciclo infinito)
+
+**Síntoma**: Las instancias se lanzan, pasan a Unhealthy, se terminan, y se lanzan nuevas instancias que repiten el ciclo.
+
+**Causas posibles**:
+1. HealthCheckGracePeriod muy corto (300s)
+2. Script user-data tarda más de 5 minutos
+3. Health check path incorrecto
+
+**Solución**:
+1. Verificar que HealthCheckGracePeriod es 600s:
+   - Abra la consola de CloudFormation
+   - Seleccione su pila
+   - Vaya a la pestaña **Plantilla**
+   - Busque la propiedad `HealthCheckGracePeriod` en el recurso AutoScalingGroup
+   - Debe ser 600 (10 minutos), no 300 (5 minutos)
+   - Si es 300, debe actualizar la plantilla y volver a desplegar
+2. Verificar que yum update -y fue eliminado del UserData:
+   - En la misma plantilla, busque la sección UserData
+   - Verifique que NO hay una línea `yum update -y`
+   - Este comando puede tardar 5-10 minutos y causar que las instancias fallen el health check
+   - Si existe, elimínelo de la plantilla y vuelva a desplegar
+3. Verificar que Target Group usa /health.php:
+   - En la consola de EC2, vaya a **Grupos de destino**
+   - Seleccione su Target Group
+   - Vaya a la pestaña **Comprobaciones de estado**
+   - Verifique que la **Ruta** es `/health.php`
+   - Si es diferente, edite el Target Group y cambie la ruta
+4. Si el problema persiste después de estos cambios:
+   - Elimine la pila de CloudFormation
+   - Corrija la plantilla con los valores correctos
+   - Vuelva a crear la pila con la plantilla corregida
 
 ---
 

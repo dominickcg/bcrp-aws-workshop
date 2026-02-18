@@ -111,9 +111,16 @@ Un Application Load Balancer (ALB) distribuye automáticamente el tráfico entra
    - **VPC**: Seleccione la VPC compartida del workshop
 
 3. En la sección **Comprobaciones de estado**:
-   - **Ruta de comprobación de estado**: `/` (dejar por defecto)
+   - **Ruta de comprobación de estado**: `/health.php`
    - **Intervalo**: **30** segundos
+   - **Tiempo de espera**: **5** segundos
    - **Umbral correcto**: **2** comprobaciones consecutivas
+   - **Umbral incorrecto**: **3** comprobaciones consecutivas
+
+   **📝 Notas sobre la configuración de health checks:**
+   - **Ruta `/health.php`**: Usamos `/health.php` en lugar de `/` para que el health check no dependa de la conexión a RDS. Este endpoint simple solo verifica que Apache y PHP están funcionando correctamente.
+   - **Umbral correcto de 2**: Permite que las instancias sean marcadas como healthy más rápido (60 segundos en lugar de 150 segundos con el valor predeterminado de 5).
+   - **Umbral incorrecto de 3**: Hace el sistema más tolerante a fallos temporales (90 segundos en lugar de 60 segundos con el valor predeterminado de 2), evitando que instancias saludables sean marcadas como unhealthy por problemas momentáneos de red.
 
 4. Haga clic en **Siguiente**
 
@@ -143,7 +150,16 @@ Un Application Load Balancer (ALB) distribuye automáticamente el tráfico entra
 3. En la pestaña **Detalles**, copie el **ARN** completo del Target Group
 4. Guarde este ARN en un archivo de texto temporal, lo necesitará en el siguiente paso
 
-**✓ Verificación**: El ARN debe tener el formato: `arn:aws:elasticloadbalancing:region:account-id:targetgroup/tg-web-{nombre-participante}/...`
+**✓ Verificación**: En la lista de grupos de destino, confirme que:
+- El nombre es `tg-web-{nombre-participante}`
+- El protocolo es HTTP en el puerto 80
+- La ruta de comprobación de estado es `/health.php`
+- El intervalo es 30 segundos
+- El tiempo de espera es 5 segundos
+- El umbral correcto es 2 comprobaciones consecutivas
+- El umbral incorrecto es 3 comprobaciones consecutivas
+
+**✓ Verificación del ARN**: El ARN debe tener el formato: `arn:aws:elasticloadbalancing:region:account-id:targetgroup/tg-web-{nombre-participante}/...`
 
 ---
 

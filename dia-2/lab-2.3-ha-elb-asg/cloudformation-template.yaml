@@ -52,9 +52,6 @@ Resources:
             
             echo "Iniciando configuración de instancia..."
             
-            # Actualizar sistema
-            yum update -y
-            
             # Instalar Apache y PHP
             yum install -y httpd php php-mysqlnd
             
@@ -62,6 +59,14 @@ Resources:
             
             # Crear directorio de aplicación
             mkdir -p /var/www/html
+            
+            # Crear health check endpoint SIMPLE (sin dependencia de DB)
+            cat > /var/www/html/health.php << 'EOFHEALTH'
+            <?php
+            http_response_code(200);
+            echo "OK";
+            ?>
+            EOFHEALTH
             
             # Crear archivo de configuración
             cat > /var/www/html/config.php << 'EOFCONFIG'
@@ -412,7 +417,8 @@ Resources:
       TargetGroupARNs:
         - !Ref TargetGroupArn
       HealthCheckType: ELB
-      HealthCheckGracePeriod: 300
+      # Grace period de 10 minutos para permitir instalación completa del stack web
+      HealthCheckGracePeriod: 600
       Tags:
         - Key: Name
           Value: !Sub 'ec2-asg-${AWS::StackName}'

@@ -1,0 +1,290 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Plantilla CloudFormation para desplegar una aplicacion web de IA Generativa
+  con Amazon Bedrock. Crea una instancia EC2 con una aplicacion Flask que
+  consume la API de Bedrock con Guardrails de seguridad.
+  Workshop BCRP - Dia 4, Laboratorio 4.2 Parte 3.
+
+Parameters:
+  ModelId:
+    Type: String
+    Description: ID del modelo de Amazon Bedrock a utilizar
+    Default: anthropic.claude-3-haiku-20240307-v1:0
+    AllowedPattern: ^[a-z0-9.-]+:[a-z0-9-]+$
+    ConstraintDescription: >
+      Debe ser un ID de modelo valido de Bedrock
+      (ej: anthropic.claude-3-haiku-20240307-v1:0)
+
+  GuardrailIdentifier:
+    Type: String
+    Description: ID del Guardrail de Bedrock creado en el Paso 7
+    AllowedPattern: ^[a-z0-9]+$
+    ConstraintDescription: >
+      Debe ser el ID alfanumerico del Guardrail (no el nombre)
+
+  GuardrailVersion:
+    Type: String
+    Description: Version del Guardrail (usar DRAFT para pruebas)
+    Default: DRAFT
+
+  InstanceType:
+    Type: String
+    Description: Tipo de instancia EC2
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t3.micro
+
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Description: AMI de Amazon Linux 2023 (se obtiene automaticamente)
+
+Resources:
+  BedrockAppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group para aplicacion web Bedrock - Workshop BCRP
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: Permitir trafico HTTP desde cualquier origen
+
+  BedrockAppRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: BedrockInvokePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/${ModelId}
+              - Effect: Allow
+                Action:
+                  - bedrock:ApplyGuardrail
+                Resource: !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:guardrail/${GuardrailIdentifier}
+
+  BedrockAppInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref BedrockAppRole
+
+  BedrockAppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref LatestAmiId
+      IamInstanceProfile: !Ref BedrockAppInstanceProfile
+      SecurityGroups:
+        - !Ref BedrockAppSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub bedrock-app-${AWS::StackName}
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -e
+
+          # Actualizar sistema
+          dnf update -y
+          dnf install -y python3-pip
+
+          # Instalar dependencias Python
+          pip3 install flask boto3 gunicorn
+
+          # Crear directorio de la aplicacion
+          mkdir -p /opt/bedrock-app
+          cd /opt/bedrock-app
+
+          # Crear aplicacion Flask
+          cat > app.py << 'APPEOF'
+          import json
+          import boto3
+          from flask import Flask, request, jsonify, render_template_string
+
+          app = Flask(__name__)
+
+          REGION = "${AWS::Region}"
+          MODEL_ID = "${ModelId}"
+          GUARDRAIL_ID = "${GuardrailIdentifier}"
+          GUARDRAIL_VERSION = "${GuardrailVersion}"
+
+          bedrock = boto3.client("bedrock-runtime", region_name=REGION)
+
+          HTML_TEMPLATE = """
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Asistente IA - BCRP Workshop</title>
+              <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem; }
+                  .container { max-width: 800px; width: 100%; }
+                  h1 { color: #1a1a2e; margin-bottom: 0.5rem; font-size: 1.5rem; }
+                  .subtitle { color: #666; margin-bottom: 1.5rem; font-size: 0.9rem; }
+                  .chat-box { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+                  textarea { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; resize: vertical; min-height: 80px; font-family: inherit; }
+                  textarea:focus { outline: none; border-color: #4a90d9; }
+                  button { background: #4a90d9; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 1rem; cursor: pointer; margin-top: 0.75rem; }
+                  button:hover { background: #357abd; }
+                  button:disabled { background: #ccc; cursor: not-allowed; }
+                  .response { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); white-space: pre-wrap; line-height: 1.6; }
+                  .response.error { border-left: 4px solid #e74c3c; background: #fdf0ef; }
+                  .response.success { border-left: 4px solid #27ae60; }
+                  .loading { display: none; text-align: center; padding: 1rem; color: #666; }
+                  .footer { margin-top: 2rem; text-align: center; color: #999; font-size: 0.8rem; }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>Asistente IA - Workshop BCRP</h1>
+                  <p class="subtitle">Aplicacion de IA Generativa con Amazon Bedrock y Guardrails</p>
+                  <div class="chat-box">
+                      <form id="queryForm">
+                          <textarea id="prompt" placeholder="Escribe tu consulta aqui..." required></textarea>
+                          <button type="submit" id="submitBtn">Enviar</button>
+                      </form>
+                  </div>
+                  <div class="loading" id="loading">Procesando consulta...</div>
+                  <div id="responseContainer"></div>
+                  <div class="footer">
+                      <p>Modelo: {{ model_id }} | Guardrail: {{ guardrail_id }}</p>
+                  </div>
+              </div>
+              <script>
+                  document.getElementById('queryForm').addEventListener('submit', async (e) => {
+                      e.preventDefault();
+                      const prompt = document.getElementById('prompt').value.trim();
+                      if (!prompt) return;
+                      const btn = document.getElementById('submitBtn');
+                      const loading = document.getElementById('loading');
+                      const container = document.getElementById('responseContainer');
+                      btn.disabled = true;
+                      loading.style.display = 'block';
+                      container.innerHTML = '';
+                      try {
+                          const res = await fetch('/query', {
+                              method: 'POST',
+                              headers: {'Content-Type': 'application/json'},
+                              body: JSON.stringify({prompt: prompt})
+                          });
+                          const data = await res.json();
+                          const div = document.createElement('div');
+                          div.className = 'response ' + (data.blocked ? 'error' : 'success');
+                          div.textContent = data.response;
+                          container.appendChild(div);
+                      } catch (err) {
+                          const div = document.createElement('div');
+                          div.className = 'response error';
+                          div.textContent = 'Error de conexion: ' + err.message;
+                          container.appendChild(div);
+                      } finally {
+                          btn.disabled = false;
+                          loading.style.display = 'none';
+                      }
+                  });
+              </script>
+          </body>
+          </html>
+          """
+
+          @app.route("/")
+          def index():
+              return render_template_string(
+                  HTML_TEMPLATE,
+                  model_id=MODEL_ID,
+                  guardrail_id=GUARDRAIL_ID
+              )
+
+          @app.route("/query", methods=["POST"])
+          def query():
+              data = request.get_json()
+              prompt = data.get("prompt", "")
+              if not prompt:
+                  return jsonify({"response": "Por favor ingrese una consulta.", "blocked": True})
+              try:
+                  body = json.dumps({
+                      "anthropic_version": "bedrock-2023-05-31",
+                      "max_tokens": 1024,
+                      "messages": [{"role": "user", "content": prompt}]
+                  })
+                  response = bedrock.invoke_model(
+                      modelId=MODEL_ID,
+                      body=body,
+                      guardrailIdentifier=GUARDRAIL_ID,
+                      guardrailVersion=GUARDRAIL_VERSION
+                  )
+                  result = json.loads(response["body"].read())
+                  if result.get("stop_reason") == "guardrail_intervened":
+                      output_text = result.get("amazon-bedrock-guardrailAction", {}).get(
+                          "message",
+                          "Su consulta ha sido bloqueada por las politicas de seguridad del BCRP."
+                      )
+                      return jsonify({"response": output_text, "blocked": True})
+                  output_text = result["content"][0]["text"]
+                  return jsonify({"response": output_text, "blocked": False})
+              except bedrock.exceptions.ClientError as e:
+                  error_code = e.response["Error"]["Code"]
+                  if "Guardrail" in str(e) or "guardrail" in str(e):
+                      return jsonify({
+                          "response": "Su consulta ha sido bloqueada por las politicas de seguridad del BCRP. Por favor reformule su consulta.",
+                          "blocked": True
+                      })
+                  return jsonify({"response": f"Error del servicio: {error_code}", "blocked": True})
+              except Exception as e:
+                  return jsonify({"response": f"Error inesperado: {str(e)}", "blocked": True})
+
+          if __name__ == "__main__":
+              app.run(host="0.0.0.0", port=80)
+          APPEOF
+
+          # Crear servicio systemd
+          cat > /etc/systemd/system/bedrock-app.service << 'SVCEOF'
+          [Unit]
+          Description=Bedrock GenAI Web Application
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=root
+          WorkingDirectory=/opt/bedrock-app
+          ExecStart=/usr/local/bin/gunicorn -w 2 -b 0.0.0.0:80 app:app
+          Restart=always
+          RestartSec=5
+
+          [Install]
+          WantedBy=multi-user.target
+          SVCEOF
+
+          # Iniciar servicio
+          systemctl daemon-reload
+          systemctl enable bedrock-app
+          systemctl start bedrock-app
+
+Outputs:
+  ApplicationURL:
+    Description: URL de la aplicacion web (IP publica de la instancia EC2)
+    Value: !Sub http://${BedrockAppInstance.PublicIp}
+
+  InstanceId:
+    Description: ID de la instancia EC2
+    Value: !Ref BedrockAppInstance
+
+  IAMRoleArn:
+    Description: ARN del rol IAM con permisos de Bedrock
+    Value: !GetAtt BedrockAppRole.Arn

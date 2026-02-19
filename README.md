@@ -63,12 +63,16 @@ Implementa mejores prácticas de seguridad, gestión de identidades y accesos, y
 
 ---
 
-### Día 4 - Inteligencia Artificial: Machine Learning e IA Generativa
-**Duración:** TBD
+### Día 4 - Inteligencia Artificial y Machine Learning
+**Duración:** 2 horas 30 minutos
 
-Descubre servicios de inteligencia artificial y machine learning de AWS, incluyendo modelos pre-entrenados y capacidades de IA generativa.
+Explora servicios de inteligencia artificial y machine learning de AWS. Aprende a construir modelos de ML sin código usando SageMaker Canvas y a implementar aplicaciones de IA generativa con Amazon Bedrock, incluyendo técnicas de prompt engineering y controles de seguridad con Guardrails.
 
-**Contenido:** 🚧 En desarrollo
+**Laboratorios:**
+- Lab 4.1: Machine Learning con SageMaker Canvas (50 minutos)
+- Lab 4.2: IA Generativa con Amazon Bedrock (80 minutos)
+
+📖 [Ver contenido del Día 4](./dia-4/README.md)
 
 ---
 
@@ -98,7 +102,12 @@ bcrp-aws-workshop/
 │   ├── lab-3.2-iam-ssm/                         # Lab: IAM y Session Manager
 │   ├── lab-3.3-governance/                      # Lab: CloudTrail y Trusted Advisor
 │   └── limpieza/                                # Guía de limpieza opcional
-├── dia-4/                                       # 🚧 En desarrollo
+├── dia-4/                                       # Día 4: IA y Machine Learning
+│   ├── README.md                                # Guía principal del Día 4
+│   ├── TROUBLESHOOTING.md                       # Solución de problemas
+│   ├── lab-4.1-sagemaker-canvas/                # Lab: SageMaker Canvas
+│   ├── lab-4.2-bedrock/                         # Lab: Amazon Bedrock
+│   └── limpieza/                                # Guía de limpieza opcional
 ```
 
 ## 🎯 Objetivos de Aprendizaje

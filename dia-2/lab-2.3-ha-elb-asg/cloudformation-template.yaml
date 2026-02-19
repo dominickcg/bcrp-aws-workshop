@@ -110,10 +110,17 @@ Resources:
                 $sql_insert = "INSERT INTO messages (nombre, email, mensaje) VALUES ('$nombre', '$email', '$mensaje')";
                 
                 if ($conn->query($sql_insert) === TRUE) {
-                    $success_message = "Mensaje guardado exitosamente";
+                    // REDIRIGIR después de insertar (patrón PRG)
+                    header("Location: " . $_SERVER['PHP_SELF'] . "?success=1");
+                    exit();
                 } else {
                     $error_message = "Error: " . $conn->error;
                 }
+            }
+            
+            // Mostrar mensaje de éxito si viene de redirección
+            if (isset($_GET['success'])) {
+                $success_message = "Mensaje guardado exitosamente";
             }
             
             // Obtener todos los mensajes

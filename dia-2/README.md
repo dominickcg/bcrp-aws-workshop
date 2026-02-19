@@ -75,7 +75,7 @@ Para completar los laboratorios del Día 2, debes tener activos los siguientes r
 El instructor ha provisionado los siguientes recursos compartidos que utilizarás durante los laboratorios:
 
 - **Subred privada de respaldo**: Para configuración Multi-AZ de RDS (Lab 2.2)
-- **Repositorio de código**: Archivos del sitio web estático para S3 (Lab 2.1)
+- **Archivos del sitio web estático**: Ubicados en [`./lab-2.1-storage/sitio-web-s3/`](./lab-2.1-storage/sitio-web-s3/) para S3 (Lab 2.1)
 
 ⚠️ **Recurso compartido - NO modificar**: Estos recursos son utilizados por todos los participantes. No los modifiques ni elimines.
 

@@ -38,7 +38,7 @@ Al completar este laboratorio, serás capaz de:
 
 ## Archivos de Soporte
 
-- `cloudformation-template.yaml`: Plantilla de CloudFormation que despliega el Auto Scaling Group con la aplicación web
+- [`cloudformation-template.yaml`](./cloudformation-template.yaml): Plantilla de CloudFormation que despliega el Auto Scaling Group con la aplicación web
 
 ## Prerequisitos
 
@@ -175,10 +175,17 @@ CloudFormation es un servicio de infraestructura como código que permite defini
 
 ### Paso 7: Cargar Plantilla de CloudFormation
 
-1. En la sección **Especificar plantilla**:
+1. Primero, descargue la plantilla de CloudFormation:
+   - Descargue el archivo [`cloudformation-template.yaml`](./cloudformation-template.yaml) ubicado en esta carpeta del laboratorio
+   - Guarde el archivo en su computadora local (anote la ubicación donde lo guardó)
+
+2. Regrese a la consola de AWS donde dejó abierta la página de CloudFormation (del Paso 6)
+
+3. En la sección **Especificar plantilla**:
    - Seleccione **Cargar un archivo de plantilla**
    - Haga clic en **Elegir archivo**
-   - Navegue hasta la carpeta de este laboratorio y seleccione el archivo **`cloudformation-template.yaml`**
+   - Navegue hasta la ubicación donde guardó el archivo `cloudformation-template.yaml`
+   - Seleccione el archivo
    - Haga clic en **Siguiente**
 
 ### Paso 8: Configurar Parámetros de la Pila

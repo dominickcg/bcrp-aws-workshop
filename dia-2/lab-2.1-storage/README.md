@@ -36,7 +36,7 @@ Al completar este laboratorio, serás capaz de:
 
 ## Archivos de Soporte
 
-- `bucket-policy.json`: Política de acceso público para el bucket S3
+- [`bucket-policy.json`](./bucket-policy.json): Política de acceso público para el bucket S3
 
 ## Prerequisitos
 
@@ -384,15 +384,13 @@ S3 puede servir sitios web estáticos directamente, sin necesidad de un servidor
 
 ### Paso 13: Descargar Archivos del Sitio Web
 
-Para este laboratorio, utilizaremos un sitio web de ejemplo que está disponible en la carpeta `sitio-web-s3/` de este laboratorio.
+Para este laboratorio, utilizaremos un sitio web de ejemplo. Descargue los archivos siguiendo estos pasos:
 
-1. Localice la carpeta `sitio-web-s3/` en este mismo directorio del laboratorio
-   - Ruta completa: `dia-2/lab-2.1-storage/sitio-web-s3/`
-2. Esta carpeta contiene todos los archivos necesarios para el sitio web
-5. Extraiga el archivo ZIP en su computadora local
-6. Navegue a la carpeta extraída y localice la carpeta `sitio-web-s3/`
+1. Descargue el archivo [`sitio-web-s3.zip`](./sitio-web-s3.zip) ubicado en esta carpeta del laboratorio
+2. Extraiga el archivo ZIP en su computadora local
+3. Verifique que la carpeta extraída contiene todos los archivos necesarios
 
-**✓ Verificación**: Confirme que tiene los siguientes archivos y carpetas en `sitio-web-s3/`:
+**✓ Verificación**: Confirme que tiene los siguientes archivos y carpetas después de extraer el ZIP:
 - `index.html` (archivo principal)
 - `about.html` (página adicional)
 - `error.html` (página de error personalizada)
@@ -440,7 +438,7 @@ Para que el sitio web sea accesible públicamente, debemos aplicar una política
 1. Haga clic en la pestaña **Permisos**
 2. Desplácese hacia abajo hasta la sección **Política del bucket**
 3. Haga clic en **Editar**
-4. Abra el archivo `bucket-policy.json` ubicado en esta carpeta del laboratorio
+4. Abra el archivo [`bucket-policy.json`](./bucket-policy.json) ubicado en esta carpeta del laboratorio
 5. Copie el contenido del archivo
 6. Pegue el contenido en el editor de políticas
 7. **Reemplace** `NOMBRE-DEL-BUCKET` con el nombre real de su bucket
